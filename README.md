@@ -39,6 +39,33 @@ If you do run into any issues, or have improvement suggestions, creating a [GitH
 
 ## Installation
 
+### Nix
+
+Add this flake to your `inputs` in `flake.nix`:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+	quickshell = {
+	  url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
+	  inputs.nixpkgs.follows = "nixpkgs";
+	};
+
+	qml-niri = {
+      url = "github:juuyokka/qml-niri/feat-nix-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+	  inputs.quickshell.follows = "quickshell";
+    };
+  };
+
+  # ...
+}
+```
+
+The plugin itself is available under `qml-niri.packages.<system>.default`. For those wishing to use it with Quickshell, the flake also provides a build of Quickshell with the plugin under `qml-niri.packages.<system>.quickshell`.
+
 ### Building from source
 
 Install [just](https://github.com/casey/just) and run:
