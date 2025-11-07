@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QQmlEngine>
 #include "ipcclient.h"
 #include "workspacemodel.h"
 #include "windowmodel.h"
@@ -8,6 +9,7 @@
 class Niri : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(WorkspaceModel* workspaces READ workspaces CONSTANT)
     Q_PROPERTY(WindowModel* windows READ windows CONSTANT)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)

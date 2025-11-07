@@ -3,10 +3,12 @@
 #include <QAbstractListModel>
 #include <QJsonObject>
 #include <QObject>
+#include <QQmlEngine>
 
 class Window : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(quint64 id MEMBER id CONSTANT)
     Q_PROPERTY(QString title MEMBER title CONSTANT)
     Q_PROPERTY(QString appId MEMBER appId CONSTANT)
@@ -36,6 +38,7 @@ public:
 class WindowModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
 

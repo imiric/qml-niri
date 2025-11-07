@@ -2,6 +2,7 @@
 
 #include <QAbstractListModel>
 #include <QJsonObject>
+#include <QQmlEngine>
 
 struct Workspace {
     quint64 id;
@@ -17,6 +18,7 @@ struct Workspace {
 class WorkspaceModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(int maxCount READ maxCount WRITE setMaxCount NOTIFY maxCountChanged)
 
