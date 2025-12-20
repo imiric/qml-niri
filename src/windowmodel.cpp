@@ -110,6 +110,12 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
         }
     }
 
+    // Sort by window ID for consistent ordering
+    std::sort(m_windows.begin(), m_windows.end(),
+              [](const Window *a, const Window *b) {
+                return a->id < b->id;
+              });
+
     endResetModel();
     emit countChanged();
     updateFocusedWindow();
