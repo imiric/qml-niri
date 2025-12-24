@@ -33,6 +33,8 @@ public:
     bool isFloating;
     bool isUrgent;
     QString iconPath;
+    std::optional<qint64> scroll_column;
+    std::optional<qint64> scroll_tile;
 };
 
 class WindowModel : public QAbstractListModel

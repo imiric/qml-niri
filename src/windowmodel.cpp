@@ -110,10 +110,13 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
         }
     }
 
-    // Sort by window ID for consistent ordering
+    // Sort by window position in layout for consistent ordering
     std::sort(m_windows.begin(), m_windows.end(),
               [](const Window *a, const Window *b) {
-                return a->id < b->id;
+                  if (a->scroll_column == b->scroll_column) {
+                      return a->scroll_tile < b->scroll_tile;
+                  }
+                  return a->scroll_column < b->scroll_column;
               });
 
     endResetModel();
@@ -230,6 +233,15 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isFloating = obj["is_floating"].toBool();
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
+
+    win->scroll_column = {};
+    win->scroll_tile = {};
+    QJsonValue window_pos = obj["layout"].toObject()["pos_in_scrolling_layout"];
+    if (!window_pos.isUndefined() && !window_pos.isNull()) {
+        QJsonArray scrolling_pos = window_pos.toArray();
+        win->scroll_column = scrolling_pos[0].toInteger();
+        win->scroll_tile = scrolling_pos[1].toInteger();
+    }
 
     return win;
 }
