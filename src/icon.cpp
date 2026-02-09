@@ -115,9 +115,11 @@ QStringList getXdgIconDirs()
         }
     }
 
-    QString pixmaps = "/usr/share/pixmaps";
-    if (QDir(pixmaps).exists()) {
-        iconDirs.append(pixmaps);
+    for (const QString &dir : xdgDataDirs.split(':', Qt::SkipEmptyParts)) {
+        QString pixmapsDir = dir + "/pixmaps";
+        if (QDir(pixmapsDir).exists() && !iconDirs.contains(pixmapsDir)) {
+            iconDirs.append(pixmapsDir);
+        }
     }
 
     return iconDirs;
