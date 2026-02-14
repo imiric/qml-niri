@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(qml-niri VERSION 0.1.2 LANGUAGES CXX)
+project(qml-niri VERSION 0.1.3 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,7 +17,7 @@ set_target_properties(Niri PROPERTIES
 
 qt_add_qml_module(Niri
         URI Niri
-    VERSION 0.1.2
+    VERSION 0.1.3
     SOURCES
         src/icon.h src/icon.cpp
         src/ipcclient.h src/ipcclient.cpp
