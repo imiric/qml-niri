@@ -113,17 +113,19 @@ QStringList getXdgIconDirs()
     }
 
     QString xdgDataDirs = env.value("XDG_DATA_DIRS", "/usr/local/share:/usr/share");
-    for (const QString &dir : xdgDataDirs.split(':', Qt::SkipEmptyParts)) {
+    const QStringList dataDirList = xdgDataDirs.split(':', Qt::SkipEmptyParts);
+
+    for (const QString &dir : dataDirList) {
         QString iconDir = dir + "/icons";
         if (QDir(iconDir).exists() && !iconDirs.contains(iconDir)) {
-            iconDirs.append(iconDir);
+          iconDirs.append(iconDir);
         }
     }
 
-    for (const QString &dir : xdgDataDirs.split(':', Qt::SkipEmptyParts)) {
+    for (const QString &dir : dataDirList) {
         QString pixmapsDir = dir + "/pixmaps";
         if (QDir(pixmapsDir).exists() && !iconDirs.contains(pixmapsDir)) {
-            iconDirs.append(pixmapsDir);
+          iconDirs.append(pixmapsDir);
         }
     }
 
