@@ -170,11 +170,8 @@ QString findDesktopFile(const QString &appId)
         }
     }
 
-    for (const QString &candidate : candidates) {
-        QString iconValue = parseIconFromDesktopFile(candidate);
-        if (!iconValue.isEmpty()) {
-            return candidate;
-        }
+    if (!candidates.isEmpty()) {
+        return candidates.first();
     }
 
     return QString();
