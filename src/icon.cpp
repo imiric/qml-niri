@@ -283,6 +283,7 @@ QString findIconInTheme(const QString &iconName)
         iconName.toLower(),
         iconName.left(1).toLower() + iconName.mid(1)
     };
+    iconVariants.removeDuplicates();
 
     auto checkPath = [](const QString &path) -> QString {
         QFileInfo info(path);
