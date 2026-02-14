@@ -72,7 +72,9 @@ namespace Internal {
 
 QStringList getXdgDataDirs()
 {
-    QStringList dirs;
+    static QStringList dirs;
+    if (!dirs.isEmpty()) return dirs;
+
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
     QString xdgDataHome = env.value("XDG_DATA_HOME");
@@ -91,7 +93,9 @@ QStringList getXdgDataDirs()
 
 QStringList getXdgIconDirs()
 {
-    QStringList iconDirs;
+    static QStringList iconDirs;
+    if (!iconDirs.isEmpty()) return iconDirs;
+
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
     QString legacyIcons = QDir::homePath() + "/.icons";
