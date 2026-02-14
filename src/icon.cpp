@@ -246,21 +246,13 @@ QString resolveIconPath(const QString &iconValue, const QString &desktopFileDir)
         return QString();
     }
 
-    // Try to get an actual file path from the icon
-    // QIcon doesn't directly expose file paths, so we search manually
-    QString themePath = findIconInTheme(iconValue);
-    if (!themePath.isEmpty()) {
-        return themePath;
-    }
-
-    // Fallback: manual search in common icon directories
+    // Try to find the icon in theme directories
     return findIconInTheme(iconValue);
 }
 
 QString findIconInTheme(const QString &iconName)
 {
     QStringList iconDirs = getXdgIconDirs();
-
     QStringList themes;
 
     // Current system icon theme first
