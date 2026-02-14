@@ -96,33 +96,22 @@ QStringList getXdgIconDirs()
     static QStringList iconDirs;
     if (!iconDirs.isEmpty()) return iconDirs;
 
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-
+    // Legacy icon location
     QString legacyIcons = QDir::homePath() + "/.icons";
     if (QDir(legacyIcons).exists()) {
         iconDirs.append(legacyIcons);
     }
 
-    QString xdgDataHome = env.value("XDG_DATA_HOME");
-    if (xdgDataHome.isEmpty()) {
-        xdgDataHome = QDir::homePath() + "/.local/share";
-    }
-    QString userIcons = xdgDataHome + "/icons";
-    if (QDir(userIcons).exists()) {
-        iconDirs.append(userIcons);
-    }
+    const QStringList dataDirs = getXdgDataDirs();
 
-    QString xdgDataDirs = env.value("XDG_DATA_DIRS", "/usr/local/share:/usr/share");
-    const QStringList dataDirList = xdgDataDirs.split(':', Qt::SkipEmptyParts);
-
-    for (const QString &dir : dataDirList) {
+    for (const QString &dir : dataDirs) {
         QString iconDir = dir + "/icons";
         if (QDir(iconDir).exists()) {
             iconDirs.append(iconDir);
         }
     }
 
-    for (const QString &dir : dataDirList) {
+    for (const QString &dir : dataDirs) {
         QString pixmapsDir = dir + "/pixmaps";
         if (QDir(pixmapsDir).exists()) {
             iconDirs.append(pixmapsDir);
