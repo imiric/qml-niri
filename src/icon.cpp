@@ -15,8 +15,9 @@ static QHash<QString, QString> s_cache;
 
 QString lookup(const QString &appId)
 {
-    if (s_cache.contains(appId)) {
-        return s_cache[appId];
+    auto it = s_cache.constFind(appId);
+    if (it != s_cache.constEnd()) {
+      return *it;
     }
 
     QString result;
