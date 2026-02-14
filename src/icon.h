@@ -3,6 +3,9 @@
 #include <QString>
 #include <QHash>
 
+// Resolves application IDs to icon file paths via XDG-compliant lookup.
+// Using QIcon::fromTheme() could simplify the implementation, but this does not
+// expose the underlying file path, which is required for rendering the icon.
 namespace IconLookup {
     /**
      * Look up the icon path for an application ID.
