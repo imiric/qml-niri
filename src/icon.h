@@ -26,6 +26,7 @@ namespace Internal {
     QString resolveIconPath(const QString &iconValue, const QString &desktopFileDir);
     QString findIconInTheme(const QString &iconName);
     QStringList getXdgDataDirs();
+    QStringList getXdgIconDirs();
 }
 
 } // namespace IconLookup
