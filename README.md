@@ -27,7 +27,7 @@ The [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) projec
 - Qt 6 (Core, GUI, and QML modules)
 - CMake 3.16 or newer
 - C++17 compatible compiler
-- A recent version of niri (tested with v25.08)
+- A recent version of niri (tested with v25.11)
 
 
 ## Disclaimer
