@@ -117,17 +117,19 @@ QStringList getXdgIconDirs()
 
     for (const QString &dir : dataDirList) {
         QString iconDir = dir + "/icons";
-        if (QDir(iconDir).exists() && !iconDirs.contains(iconDir)) {
-          iconDirs.append(iconDir);
+        if (QDir(iconDir).exists()) {
+            iconDirs.append(iconDir);
         }
     }
 
     for (const QString &dir : dataDirList) {
         QString pixmapsDir = dir + "/pixmaps";
-        if (QDir(pixmapsDir).exists() && !iconDirs.contains(pixmapsDir)) {
-          iconDirs.append(pixmapsDir);
+        if (QDir(pixmapsDir).exists()) {
+            iconDirs.append(pixmapsDir);
         }
     }
+
+    iconDirs.removeDuplicates();
 
     return iconDirs;
 }
