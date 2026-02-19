@@ -10,11 +10,6 @@ WindowModel::WindowModel(QObject *parent)
 {
 }
 
-WindowLayoutModel::WindowLayoutModel(QObject *parent)
-    : QAbstractListModel(parent)
-{
-}
-
 WindowModel::~WindowModel()
 {
     qDeleteAll(m_windows);
@@ -73,41 +68,6 @@ QHash<int, QByteArray> WindowModel::roleNames() const
     roles[IsUrgentRole] = "isUrgent";
     roles[IconPathRole] = "iconPath";
     roles[LayoutRole] = "layout";
-
-    return roles;
-}
-
-QVariant WindowLayoutModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid() || index.row() >= m_windows.count())
-        return QVariant();
-
-    const Window *win = m_windows.at(index.row());
-
-    switch (role) {
-    case PosInScrollingLayoutRole:
-        return QVariant::fromValue(win->layout->posInScrollingLayout);
-    case TileSizeRole:
-        return QVariant::fromValue(win->layout->tileSize);
-    case WindowSizeRole:
-        return QVariant::fromValue(win->layout->windowSize);
-    case TilePosInWorkspaceViewRole:
-        return QVariant::fromValue(win->layout->tilePosInWorkspaceView);
-    case WindowOffsetInTileRole:
-        return QVariant::fromValue(win->layout->windowOffsetInTile);
-    default:
-        return QVariant();
-    }
-}
-
-QHash<int, QByteArray> WindowLayoutModel::roleNames() const
-{
-    QHash<int, QByteArray> roles;
-    roles[PosInScrollingLayoutRole] = "posInScrollingLayout";
-    roles[TileSizeRole] = "tileSize";
-    roles[WindowSizeRole] = "windowSize";
-    roles[TilePosInWorkspaceViewRole] = "tilePosInWorkspaceView";
-    roles[WindowOffsetInTileRole] = "windowOffsetInTile";
 
     return roles;
 }
@@ -265,11 +225,7 @@ void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 
         Window *win = m_windows.at(idx);
 
-        win->layout->posInScrollingLayout = layoutObj["pos_in_scrolling_layout"].toVariant().toList();
-        win->layout->tileSize = layoutObj["tile_size"].toVariant().toList();
-        win->layout->windowSize = layoutObj["window_size"].toVariant().toList();
-        win->layout->tilePosInWorkspaceView = layoutObj["window_pos_in_workspace_view"].toVariant().toList();
-        win->layout->windowOffsetInTile = layoutObj["window_offset_in_tile"].toVariant().toList();
+        win->layout = layoutObj;
 
         QModelIndex modelIdx = index(idx);
         emit dataChanged(modelIdx, modelIdx, {LayoutRole});
@@ -295,13 +251,7 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->iconPath = IconLookup::lookup(win->appId);
 
     if (obj.contains("layout") && obj["layout"].isObject()) {
-        QJsonObject layoutObj = obj["layout"].toObject();
-
-        win->layout->posInScrollingLayout   = layoutObj["pos_in_scrolling_layout"].toVariant().toList();
-        win->layout->tileSize               = layoutObj["tile_size"].toVariant().toList();
-        win->layout->windowSize             = layoutObj["window_size"].toVariant().toList();
-        win->layout->tilePosInWorkspaceView = layoutObj["window_pos_in_workspace_view"].toVariant().toList();
-        win->layout->windowOffsetInTile     = layoutObj["window_offset_in_tile"].toVariant().toList();
+        win->layout = obj["layout"].toObject();
     }
 
     return win;
