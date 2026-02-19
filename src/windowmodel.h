@@ -68,7 +68,6 @@ class WindowLayoutModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-    //Q_PROPERTY(WindowLayout* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
 
 public:
     enum WindowLayoutRoles {
