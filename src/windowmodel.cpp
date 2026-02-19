@@ -269,7 +269,7 @@ void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
         win->layout->tileSize = layoutObj["tile_size"].toVariant().toList();
         win->layout->windowSize = layoutObj["window_size"].toVariant().toList();
         win->layout->tilePosInWorkspaceView = layoutObj["window_pos_in_workspace_view"].toVariant().toList();
-        win->layout->windowOffsetInTile = layoutObj["window_offset_in_title"].toVariant().toList();
+        win->layout->windowOffsetInTile = layoutObj["window_offset_in_tile"].toVariant().toList();
 
         QModelIndex modelIdx = index(idx);
         emit dataChanged(modelIdx, modelIdx, {LayoutRole});
@@ -294,11 +294,15 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
 
-    //win->layout->posInScrollingLayout = changes["pos_in_scrolling_layout"];
-    //win->layout->tileSize = changes["tile_size"];
-    //win->layout->windowSize = changes["window_size"];
-    //win->layout->tilePosInWorkspaceView = changes["window_pos_in_workspace_view];
-    //win->layout->windowOffsetInTile = changes["window_offset_in_title"];
+    if (obj.contains("layout") && obj["layout"].isObject()) {
+        QJsonObject layoutObj = obj["layout"].toObject();
+
+        win->layout->posInScrollingLayout   = layoutObj["pos_in_scrolling_layout"].toVariant().toList();
+        win->layout->tileSize               = layoutObj["tile_size"].toVariant().toList();
+        win->layout->windowSize             = layoutObj["window_size"].toVariant().toList();
+        win->layout->tilePosInWorkspaceView = layoutObj["window_pos_in_workspace_view"].toVariant().toList();
+        win->layout->windowOffsetInTile     = layoutObj["window_offset_in_tile"].toVariant().toList();
+    }
 
     return win;
 }
