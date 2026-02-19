@@ -5,6 +5,32 @@
 #include <QObject>
 #include <QQmlEngine>
 
+class WindowLayout : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QVariant posInScrollingLayout MEMBER posInScrollingLayout CONSTANT)
+    Q_PROPERTY(QVariant tileSize MEMBER tileSize CONSTANT)
+    Q_PROPERTY(QVariant windowSize MEMBER windowSize CONSTANT)
+    Q_PROPERTY(QVariant tilePosInWorkspaceView MEMBER tilePosInWorkspaceView CONSTANT)
+    Q_PROPERTY(QVariant windowOffsetInTile MEMBER windowOffsetInTile CONSTANT)
+
+public:
+    explicit WindowLayout(QObject *parent = nullptr)
+        : QObject(parent),
+          posInScrollingLayout(QVariant()),
+          tileSize(QVariantList{0.0, 0.0}),
+          windowSize(QVariantList{0, 0}),
+          tilePosInWorkspaceView(QVariant()),
+          windowOffsetInTile(QVariantList{0.0, 0.0}) {}
+
+    QVariant posInScrollingLayout;
+    QVariantList tileSize;
+    QVariantList windowSize;
+    QVariant tilePosInWorkspaceView;
+    QVariantList windowOffsetInTile;
+};
+
 class Window : public QObject
 {
     Q_OBJECT
@@ -18,11 +44,13 @@ class Window : public QObject
     Q_PROPERTY(bool isFloating MEMBER isFloating CONSTANT)
     Q_PROPERTY(bool isUrgent MEMBER isUrgent CONSTANT)
     Q_PROPERTY(QString iconPath MEMBER iconPath CONSTANT)
+    Q_PROPERTY(WindowLayout* layout MEMBER layout CONSTANT)
 
 public:
     explicit Window(QObject *parent = nullptr)
         : QObject(parent), id(0), pid(-1), workspaceId(0),
-          isFocused(false), isFloating(false), isUrgent(false) {}
+          isFocused(false), isFloating(false), isUrgent(false),
+          layout() {}
 
     quint64 id;
     QString title;
@@ -33,6 +61,32 @@ public:
     bool isFloating;
     bool isUrgent;
     QString iconPath;
+    WindowLayout* layout;
+};
+
+class WindowLayoutModel : public QAbstractListModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+    //Q_PROPERTY(WindowLayout* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+
+public:
+    enum WindowLayoutRoles {
+        PosInScrollingLayoutRole,
+        TileSizeRole,
+        WindowSizeRole,
+        TilePosInWorkspaceViewRole,
+        WindowOffsetInTileRole
+    };
+
+    explicit WindowLayoutModel(QObject *parent = nullptr);
+    ~WindowLayoutModel();
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+private:
+    QList<Window*> m_windows;
 };
 
 class WindowModel : public QAbstractListModel
@@ -52,7 +106,8 @@ public:
         IsFocusedRole,
         IsFloatingRole,
         IsUrgentRole,
-        IconPathRole
+        IconPathRole,
+        LayoutRole
     };
 
     explicit WindowModel(QObject *parent = nullptr);

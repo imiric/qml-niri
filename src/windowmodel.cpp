@@ -10,6 +10,11 @@ WindowModel::WindowModel(QObject *parent)
 {
 }
 
+WindowLayoutModel::WindowLayoutModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+}
+
 WindowModel::~WindowModel()
 {
     qDeleteAll(m_windows);
@@ -48,6 +53,8 @@ QVariant WindowModel::data(const QModelIndex &index, int role) const
         return win->isUrgent;
     case IconPathRole:
         return win->iconPath;
+    case LayoutRole:
+        return QVariant::fromValue(win->layout);
     default:
         return QVariant();
     }
@@ -65,6 +72,43 @@ QHash<int, QByteArray> WindowModel::roleNames() const
     roles[IsFloatingRole] = "isFloating";
     roles[IsUrgentRole] = "isUrgent";
     roles[IconPathRole] = "iconPath";
+    roles[LayoutRole] = "layout";
+
+    return roles;
+}
+
+QVariant WindowLayoutModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.row() >= m_windows.count())
+        return QVariant();
+
+    const Window *win = m_windows.at(index.row());
+
+    switch (role) {
+    case PosInScrollingLayoutRole:
+        return QVariant::fromValue(win->layout->posInScrollingLayout);
+    case TileSizeRole:
+        return QVariant::fromValue(win->layout->tileSize);
+    case WindowSizeRole:
+        return QVariant::fromValue(win->layout->windowSize);
+    case TilePosInWorkspaceViewRole:
+        return QVariant::fromValue(win->layout->tilePosInWorkspaceView);
+    case WindowOffsetInTileRole:
+        return QVariant::fromValue(win->layout->windowOffsetInTile);
+    default:
+        return QVariant();
+    }
+}
+
+QHash<int, QByteArray> WindowLayoutModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[PosInScrollingLayoutRole] = "posInScrollingLayout";
+    roles[TileSizeRole] = "tileSize";
+    roles[WindowSizeRole] = "windowSize";
+    roles[TilePosInWorkspaceViewRole] = "tilePosInWorkspaceView";
+    roles[WindowOffsetInTileRole] = "windowOffsetInTile";
+
     return roles;
 }
 
@@ -208,9 +252,28 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
 
 void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 {
-    // Window layout changes don't affect the properties we're tracking
-    // This is mostly for position/size which we're not exposing yet
-    Q_UNUSED(changes);
+    for (const QJsonValue &entry : changes) {
+        const QJsonArray pair = entry.toArray();
+        quint64 idValue = pair[0].toInt();
+        QJsonObject layoutObj = pair[1].toObject();
+
+        int idx = findWindowIndex(idValue);
+        if (idx == -1) {
+            qCWarning(niriLog) << "Window not found for layout change, id:" << idValue;
+            return;
+        }
+
+        Window *win = m_windows.at(idx);
+
+        win->layout->posInScrollingLayout = layoutObj["pos_in_scrolling_layout"].toVariant().toList();
+        win->layout->tileSize = layoutObj["tile_size"].toVariant().toList();
+        win->layout->windowSize = layoutObj["window_size"].toVariant().toList();
+        win->layout->tilePosInWorkspaceView = layoutObj["window_pos_in_workspace_view"].toVariant().toList();
+        win->layout->windowOffsetInTile = layoutObj["window_offset_in_title"].toVariant().toList();
+
+        QModelIndex modelIdx = index(idx);
+        emit dataChanged(modelIdx, modelIdx, {LayoutRole});
+    }
 }
 
 Window* WindowModel::parseWindow(const QJsonObject &obj)
@@ -230,6 +293,12 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isFloating = obj["is_floating"].toBool();
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
+
+    //win->layout->posInScrollingLayout = changes["pos_in_scrolling_layout"];
+    //win->layout->tileSize = changes["tile_size"];
+    //win->layout->windowSize = changes["window_size"];
+    //win->layout->tilePosInWorkspaceView = changes["window_pos_in_workspace_view];
+    //win->layout->windowOffsetInTile = changes["window_offset_in_title"];
 
     return win;
 }
