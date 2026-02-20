@@ -226,13 +226,10 @@ void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
         }
 
         Window *win = m_windows.at(idx);
-
         win->layout = layoutObj;
-
-        QModelIndex modelIdx = index(idx);
-        //emit dataChanged(modelIdx, modelIdx, {LayoutRole});
-        emit windowLayoutsChanged();
     }
+
+    emit windowLayoutsChanged();
 }
 
 Window* WindowModel::parseWindow(const QJsonObject &obj)
@@ -253,8 +250,6 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
     win->layout = obj["layout"].toObject();
-
-    qCWarning(niriLog) << "parseWindow() layout: " << win->layout;
 
     return win;
 }
