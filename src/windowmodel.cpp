@@ -212,8 +212,6 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
 
 void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 {
-    qCWarning(niriLog) << "handleWindowLayoutsChanged() changes: " << changes;
-
     for (const QJsonValue &entry : changes) {
         const QJsonArray pair = entry.toArray();
         quint64 idValue = pair[0].toInt();
