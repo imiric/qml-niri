@@ -48,6 +48,8 @@ QVariant WindowModel::data(const QModelIndex &index, int role) const
         return win->isUrgent;
     case IconPathRole:
         return win->iconPath;
+    case LayoutRole:
+        return QVariant::fromValue(win->layout);
     default:
         return QVariant();
     }
@@ -65,6 +67,8 @@ QHash<int, QByteArray> WindowModel::roleNames() const
     roles[IsFloatingRole] = "isFloating";
     roles[IsUrgentRole] = "isUrgent";
     roles[IconPathRole] = "iconPath";
+    roles[LayoutRole] = "layout";
+
     return roles;
 }
 
@@ -208,9 +212,22 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
 
 void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 {
-    // Window layout changes don't affect the properties we're tracking
-    // This is mostly for position/size which we're not exposing yet
-    Q_UNUSED(changes);
+    for (const QJsonValue &entry : changes) {
+        const QJsonArray pair = entry.toArray();
+        quint64 idValue = pair[0].toInt();
+        QJsonObject layoutObj = pair[1].toObject();
+
+        int idx = findWindowIndex(idValue);
+        if (idx == -1) {
+            qCWarning(niriLog) << "Window not found for layout change, id:" << idValue;
+            return;
+        }
+
+        Window *win = m_windows.at(idx);
+        win->layout = layoutObj;
+    }
+
+    emit windowLayoutsChanged();
 }
 
 Window* WindowModel::parseWindow(const QJsonObject &obj)
@@ -230,6 +247,7 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isFloating = obj["is_floating"].toBool();
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
+    win->layout = obj["layout"].toObject();
 
     return win;
 }

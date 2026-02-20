@@ -18,11 +18,13 @@ class Window : public QObject
     Q_PROPERTY(bool isFloating MEMBER isFloating CONSTANT)
     Q_PROPERTY(bool isUrgent MEMBER isUrgent CONSTANT)
     Q_PROPERTY(QString iconPath MEMBER iconPath CONSTANT)
+    Q_PROPERTY(QJsonObject layout MEMBER layout CONSTANT)
 
 public:
     explicit Window(QObject *parent = nullptr)
         : QObject(parent), id(0), pid(-1), workspaceId(0),
-          isFocused(false), isFloating(false), isUrgent(false) {}
+          isFocused(false), isFloating(false), isUrgent(false),
+          layout(QJsonObject()) {}
 
     quint64 id;
     QString title;
@@ -33,6 +35,7 @@ public:
     bool isFloating;
     bool isUrgent;
     QString iconPath;
+    QJsonObject layout;
 };
 
 class WindowModel : public QAbstractListModel
@@ -41,6 +44,7 @@ class WindowModel : public QAbstractListModel
     QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+    Q_PROPERTY(QJsonObject windowLayouts READ windowLayouts NOTIFY windowLayoutsChanged)
 
 public:
     enum WindowRoles {
@@ -52,7 +56,8 @@ public:
         IsFocusedRole,
         IsFloatingRole,
         IsUrgentRole,
-        IconPathRole
+        IconPathRole,
+        LayoutRole
     };
 
     explicit WindowModel(QObject *parent = nullptr);
@@ -63,6 +68,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Window* focusedWindow() const { return m_focusedWindow; }
+    QJsonObject windowLayouts() const { return m_windowLayouts; }
 
 public slots:
     void handleEvent(const QJsonObject &event);
@@ -70,6 +76,7 @@ public slots:
 signals:
     void countChanged();
     void focusedWindowChanged();
+    void windowLayoutsChanged();
 
 private:
     void handleWindowsChanged(const QJsonArray &windows);
@@ -85,4 +92,5 @@ private:
 
     QList<Window*> m_windows;
     Window *m_focusedWindow = nullptr;
+    QJsonObject m_windowLayouts;
 };
