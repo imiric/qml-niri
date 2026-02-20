@@ -44,6 +44,7 @@ class WindowModel : public QAbstractListModel
     QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+    Q_PROPERTY(QJsonObject windowLayouts READ windowLayouts NOTIFY windowLayoutsChanged)
 
 public:
     enum WindowRoles {
@@ -67,6 +68,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Window* focusedWindow() const { return m_focusedWindow; }
+    QJsonObject windowLayouts() const { return m_windowLayouts; }
 
 public slots:
     void handleEvent(const QJsonObject &event);
@@ -74,6 +76,7 @@ public slots:
 signals:
     void countChanged();
     void focusedWindowChanged();
+    void windowLayoutsChanged();
 
 private:
     void handleWindowsChanged(const QJsonArray &windows);
@@ -89,4 +92,5 @@ private:
 
     QList<Window*> m_windows;
     Window *m_focusedWindow = nullptr;
+    QJsonObject m_windowLayouts;
 };
