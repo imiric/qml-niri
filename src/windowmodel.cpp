@@ -48,6 +48,8 @@ QVariant WindowModel::data(const QModelIndex &index, int role) const
         return win->isUrgent;
     case IconPathRole:
         return win->iconPath;
+    case LayoutRole:
+        return QVariant::fromValue(win->layout);
     default:
         return QVariant();
     }
@@ -65,6 +67,8 @@ QHash<int, QByteArray> WindowModel::roleNames() const
     roles[IsFloatingRole] = "isFloating";
     roles[IsUrgentRole] = "isUrgent";
     roles[IconPathRole] = "iconPath";
+    roles[LayoutRole] = "layout";
+
     return roles;
 }
 
@@ -98,6 +102,22 @@ void WindowModel::handleEvent(const QJsonObject &event)
     }
 }
 
+void WindowModel::sortWindowsByScrollingPosition()
+{
+    std::sort(m_windows.begin(), m_windows.end(),
+        [](const Window *a, const Window *b) {
+            const auto [colA, tileA] = std::pair{
+                a->layout["pos_in_scrolling_layout"][0].toInt(),
+                a->layout["pos_in_scrolling_layout"][1].toInt()
+            };
+            const auto [colB, tileB] = std::pair{
+                b->layout["pos_in_scrolling_layout"][0].toInt(),
+                b->layout["pos_in_scrolling_layout"][1].toInt()
+            };
+            return (tileA != tileB) ? (tileA < tileB) : (colA < colB);
+        });
+}
+
 void WindowModel::handleWindowsChanged(const QJsonArray &windows)
 {
     beginResetModel();
@@ -110,12 +130,7 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
         }
     }
 
-    // Sort by window ID for consistent ordering
-    std::sort(m_windows.begin(), m_windows.end(),
-              [](const Window *a, const Window *b) {
-                return a->id < b->id;
-              });
-
+    sortWindowsByScrollingPosition();
     endResetModel();
     emit countChanged();
     updateFocusedWindow();
@@ -208,9 +223,27 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
 
 void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 {
-    // Window layout changes don't affect the properties we're tracking
-    // This is mostly for position/size which we're not exposing yet
-    Q_UNUSED(changes);
+    beginResetModel();
+    for (const QJsonValue &entry : changes) {
+        const QJsonArray pair = entry.toArray();
+        quint64 idValue = pair[0].toInt();
+        QJsonObject layoutObj = pair[1].toObject();
+
+        int idx = findWindowIndex(idValue);
+        if (idx == -1) {
+            qCWarning(niriLog) << "Window not found for layout change, id:" << idValue;
+            return;
+        }
+
+        Window *win = m_windows.at(idx);
+        win->layout = layoutObj;
+
+        QModelIndex modelIdx = index(idx);
+        emit dataChanged(modelIdx, modelIdx, {LayoutRole});
+    }
+    sortWindowsByScrollingPosition();
+    endResetModel();
+    emit windowLayoutChanged();
 }
 
 Window* WindowModel::parseWindow(const QJsonObject &obj)
@@ -230,6 +263,7 @@ Window* WindowModel::parseWindow(const QJsonObject &obj)
     win->isFloating = obj["is_floating"].toBool();
     win->isUrgent = obj["is_urgent"].toBool();
     win->iconPath = IconLookup::lookup(win->appId);
+    win->layout = obj["layout"].toObject();
 
     return win;
 }
