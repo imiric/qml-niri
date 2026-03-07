@@ -22,15 +22,6 @@ int WindowModel::rowCount(const QModelIndex &parent) const
     return m_windows.count();
 }
 
-QVariant WindowModel::windowLayout(const QModelIndex &index) const
-{
-    if (!index.isValid())
-        return QVariant();
-
-    const Window *win = m_windows.at(index.row());
-    return QVariant::fromValue(win->layout);
-}
-
 QVariant WindowModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid() || index.row() >= m_windows.count())

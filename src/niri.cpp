@@ -32,8 +32,8 @@ Niri::Niri(QObject *parent)
                      this, &Niri::focusedWindowChanged);
 
     // Forward window layouts changes
-    QObject::connect(m_windowModel, &WindowModel::layoutChanged,
-                     this, &Niri::layoutChanged);
+    QObject::connect(m_windowModel, &WindowModel::windowLayoutChanged,
+                     this, &Niri::windowLayoutChanged);
 }
 
 Niri::~Niri()

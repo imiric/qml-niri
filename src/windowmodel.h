@@ -44,7 +44,6 @@ class WindowModel : public QAbstractListModel
     QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
-    Q_PROPERTY(QVariant layout READ windowLayout NOTIFY layoutChanged)
 
 public:
     enum WindowRoles {
@@ -64,12 +63,10 @@ public:
     ~WindowModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant windowLayout(const QModelIndex &index) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
     Window* focusedWindow() const { return m_focusedWindow; }
-    QJsonObject windowLayout() const { return m_windowLayout; }
 
 public slots:
     void handleEvent(const QJsonObject &event);
@@ -77,7 +74,7 @@ public slots:
 signals:
     void countChanged();
     void focusedWindowChanged();
-    void layoutChanged();
+    void windowLayoutChanged();
 
 private:
     void sortWindowsByScrollingPosition();
@@ -94,5 +91,4 @@ private:
 
     QList<Window*> m_windows;
     Window *m_focusedWindow = nullptr;
-    QJsonObject m_windowLayout;
 };
