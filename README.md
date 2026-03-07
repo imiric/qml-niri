@@ -222,6 +222,8 @@ Available window properties:
   - `window_offset_in_tile`: Location of the window's visual geometry within its tile
   - `window_size`: Size of the window's visual geometry itself, not including decorations
 
+Windows are sorted by their position in the scrolling layout.
+
 #### Application icons
 
 Application icons are automatically looked up using XDG desktop entries, and can be rendered like so:
