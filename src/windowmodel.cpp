@@ -243,7 +243,7 @@ void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
     }
     sortWindowsByScrollingPosition();
     endResetModel();
-    emit layoutChanged();
+    emit windowLayoutChanged();
 }
 
 Window* WindowModel::parseWindow(const QJsonObject &obj)
