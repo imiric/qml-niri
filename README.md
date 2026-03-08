@@ -355,6 +355,7 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 - `errorOccurred(error)` - Emitted on error
 - `rawEventReceived(event)` - Emitted for all IPC events
 - `focusedWindowChanged()` - Emitted when focused window changes or its properties update
+- `windowLayoutChanged()` - Emitted when a window is moved in the layout
 
 
 ## Quickshell integration
