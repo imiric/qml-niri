@@ -62,7 +62,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    Window* focusedWindow() const { return m_focusedWindow; }
+    Window* focusedWindow() const;
 
 public slots:
     void handleEvent(const QJsonObject &event);
@@ -81,8 +81,6 @@ private:
 
     Window* parseWindow(const QJsonObject &obj);
     int findWindowIndex(quint64 id) const;
-    void updateFocusedWindow();
 
     QList<Window*> m_windows;
-    Window *m_focusedWindow = nullptr;
 };

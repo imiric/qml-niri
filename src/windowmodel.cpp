@@ -68,6 +68,15 @@ QHash<int, QByteArray> WindowModel::roleNames() const
     return roles;
 }
 
+Window* WindowModel::focusedWindow() const
+{
+    for (Window *win : m_windows) {
+        if (win->isFocused)
+            return win;
+    }
+    return nullptr;
+}
+
 void WindowModel::handleEvent(const QJsonObject &event)
 {
     if (event.contains("WindowsChanged")) {
@@ -118,7 +127,7 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
 
     endResetModel();
     emit countChanged();
-    updateFocusedWindow();
+    emit focusedWindowChanged();
 }
 
 void WindowModel::handleWindowOpenedOrChanged(const QJsonObject &windowObj)
@@ -150,7 +159,7 @@ void WindowModel::handleWindowOpenedOrChanged(const QJsonObject &windowObj)
                 emit dataChanged(modelIdx, modelIdx, {IsFocusedRole});
             }
         }
-        updateFocusedWindow();
+        emit focusedWindowChanged();
     }
 }
 
@@ -171,7 +180,7 @@ void WindowModel::handleWindowClosed(quint64 id)
     emit countChanged();
 
     if (wasFocused) {
-        updateFocusedWindow();
+        emit focusedWindowChanged();
     }
 }
 
@@ -188,7 +197,7 @@ void WindowModel::handleWindowFocusChanged(const QJsonValue &idValue)
         }
     }
 
-    updateFocusedWindow();
+    emit focusedWindowChanged();
 }
 
 void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
@@ -241,25 +250,4 @@ int WindowModel::findWindowIndex(quint64 id) const
             return i;
     }
     return -1;
-}
-
-void WindowModel::updateFocusedWindow()
-{
-    Window *newFocused = nullptr;
-
-    for (Window *win : m_windows) {
-        if (win->isFocused) {
-            newFocused = win;
-            break;
-        }
-    }
-
-    // Emit if focus changed to a different window, or if the focused window's
-    // properties changed.
-    bool shouldEmit = (m_focusedWindow != newFocused) || (newFocused != nullptr);
-    m_focusedWindow = newFocused;
-
-    if (shouldEmit) {
-        emit focusedWindowChanged();
-    }
 }
