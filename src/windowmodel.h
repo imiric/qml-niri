@@ -18,11 +18,13 @@ class Window : public QObject
     Q_PROPERTY(bool isFloating MEMBER isFloating CONSTANT)
     Q_PROPERTY(bool isUrgent MEMBER isUrgent CONSTANT)
     Q_PROPERTY(QString iconPath MEMBER iconPath CONSTANT)
+    Q_PROPERTY(QJsonObject layout MEMBER layout CONSTANT)
 
 public:
     explicit Window(QObject *parent = nullptr)
         : QObject(parent), id(0), pid(-1), workspaceId(0),
-          isFocused(false), isFloating(false), isUrgent(false) {}
+          isFocused(false), isFloating(false), isUrgent(false),
+          layout(QJsonObject()) {}
 
     quint64 id;
     QString title;
@@ -33,6 +35,7 @@ public:
     bool isFloating;
     bool isUrgent;
     QString iconPath;
+    QJsonObject layout;
 };
 
 class WindowModel : public QAbstractListModel
@@ -52,7 +55,8 @@ public:
         IsFocusedRole,
         IsFloatingRole,
         IsUrgentRole,
-        IconPathRole
+        IconPathRole,
+        LayoutRole
     };
 
     explicit WindowModel(QObject *parent = nullptr);
@@ -70,8 +74,10 @@ public slots:
 signals:
     void countChanged();
     void focusedWindowChanged();
+    void windowLayoutChanged();
 
 private:
+    void sortWindowsByScrollingPosition();
     void handleWindowsChanged(const QJsonArray &windows);
     void handleWindowOpenedOrChanged(const QJsonObject &window);
     void handleWindowClosed(quint64 id);

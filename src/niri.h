@@ -39,6 +39,7 @@ signals:
     void errorOccurred(const QString &error);
     void rawEventReceived(const QJsonObject &event);
     void focusedWindowChanged();
+    void windowLayoutChanged();
 
 private:
     void sendAction(const QJsonObject &action);

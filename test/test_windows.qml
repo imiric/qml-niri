@@ -34,6 +34,10 @@ ApplicationWindow {
         onFocusedWindowChanged: {
             console.log("Focused window changed:", niri.focusedWindow?.title)
         }
+
+        onWindowLayoutChanged: {
+          console.log("Window layout changed:", JSON.stringify(niri.focusedWindow?.layout))
+        }
     }
 
     ColumnLayout {

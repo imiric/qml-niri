@@ -215,6 +215,14 @@ Available window properties:
 - `isFloating`: Floating window state
 - `isUrgent`: Window urgency flag
 - `iconPath`: Absolute path to application icon (empty if not found)
+- `layout`: Window layout properties
+  - `pos_in_scrolling_layout`: Location of a tiled window within a workspace
+  - `tile_pos_in_workspace_view`: Tile position within the current view of the workspace
+  - `tile_size`: Size of the tile this window is in, including decorations
+  - `window_offset_in_tile`: Location of the window's visual geometry within its tile
+  - `window_size`: Size of the window's visual geometry itself, not including decorations
+
+Windows are sorted by their position in the scrolling layout.
 
 #### Application icons
 
@@ -347,6 +355,7 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 - `errorOccurred(error)` - Emitted on error
 - `rawEventReceived(event)` - Emitted for all IPC events
 - `focusedWindowChanged()` - Emitted when focused window changes or its properties update
+- `windowLayoutChanged()` - Emitted when a window is moved in the layout
 
 
 ## Quickshell integration
