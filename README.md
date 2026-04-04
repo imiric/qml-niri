@@ -340,6 +340,7 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 - `focusWindow(id)` - Focus specific window
 - `closeWindow(id)` - Close specific window
 - `closeWindowOrFocused()` - Close focused window
+- `toggleOverview()` - Shows or hides the workspace overview
 
 *Signals:*
 - `connected()` - Emitted on successful connection
