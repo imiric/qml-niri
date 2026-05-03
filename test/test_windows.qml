@@ -34,6 +34,21 @@ ApplicationWindow {
         onFocusedWindowChanged: {
             console.log("Focused window changed:", niri.focusedWindow?.title)
         }
+
+        readonly property SortFilterProxyModel sortedWindows: SortFilterProxyModel {
+            model: niri.windows
+            sorters: [
+                RoleSorter {
+                    roleName: "workspaceId"
+                },
+                RoleSorter {
+                    roleName: "columnIndex"
+                },
+                RoleSorter {
+                    roleName: "tileIndex"
+                }
+            ]
+        }
     }
 
     ColumnLayout {
@@ -110,7 +125,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: niri.windows
+            model: niri.sortedWindows
             spacing: 5
             clip: true
 
