@@ -25,6 +25,7 @@ qt_add_qml_module(Niri
         src/niri.h src/niri.cpp
         src/windowmodel.h src/windowmodel.cpp
         src/workspacemodel.h src/workspacemodel.cpp
+        src/overviewmodel.h src/overviewmodel.cpp
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Niri
 )
 

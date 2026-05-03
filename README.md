@@ -340,6 +340,7 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 - `workspaces`: WorkspaceModel - List of all workspaces
 - `windows`: WindowModel - List of all windows
 - `focusedWindow`: Window - Currently focused window (null if none)
+- `overview`: Overview - Current state of overview (false if closed, true if open)
 
 *Methods:*
 - `connect()`: bool - Connect to niri IPC socket
@@ -358,6 +359,7 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 - `errorOccurred(error)` - Emitted on error
 - `rawEventReceived(event)` - Emitted for all IPC events
 - `focusedWindowChanged()` - Emitted when focused window changes or its properties update
+- `overviewChanged()` - Emitted when the overview state changes
 
 
 ## Quickshell integration
