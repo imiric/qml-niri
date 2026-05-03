@@ -15,12 +15,14 @@ static QHash<QString, QString> s_cache;
 
 QString lookup(const QString &appId)
 {
+    QString result;
+
+    if (appId.isEmpty()) return result;
+
     auto it = s_cache.constFind(appId);
     if (it != s_cache.constEnd()) {
       return *it;
     }
-
-    QString result;
 
     QString desktopFile = Internal::findDesktopFile(appId);
     if (desktopFile.isEmpty()) {
