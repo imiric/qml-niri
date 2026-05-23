@@ -35,3 +35,5 @@ target_link_libraries(Niri PRIVATE
     Qt6::Gui
     Qt6::Qml
 )
+
+target_compile_definitions(Niri PRIVATE QT_USE_QSTRINGBUILDER)

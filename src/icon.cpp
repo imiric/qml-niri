@@ -79,13 +79,14 @@ QStringList getXdgDataDirs()
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
-    QString xdgDataHome = env.value("XDG_DATA_HOME");
+    QString xdgDataHome = env.value(QStringLiteral("XDG_DATA_HOME"));
     if (xdgDataHome.isEmpty()) {
-        xdgDataHome = QDir::homePath() + "/.local/share";
+        xdgDataHome = QDir::homePath() + QStringLiteral("/.local/share");
     }
     dirs.append(xdgDataHome);
 
-    QString xdgDataDirs = env.value("XDG_DATA_DIRS", "/usr/local/share:/usr/share");
+    QString xdgDataDirs = env.value(QStringLiteral("XDG_DATA_DIRS"),
+                                    QStringLiteral("/usr/local/share:/usr/share"));
     dirs.append(xdgDataDirs.split(':', Qt::SkipEmptyParts));
 
     dirs.removeDuplicates();
@@ -99,7 +100,7 @@ QStringList getXdgIconDirs()
     if (!iconDirs.isEmpty()) return iconDirs;
 
     // Legacy icon location
-    QString legacyIcons = QDir::homePath() + "/.icons";
+    QString legacyIcons = QDir::homePath() + QStringLiteral("/.icons");
     if (QDir(legacyIcons).exists()) {
         iconDirs.append(legacyIcons);
     }
@@ -107,14 +108,14 @@ QStringList getXdgIconDirs()
     const QStringList dataDirs = getXdgDataDirs();
 
     for (const QString &dir : dataDirs) {
-        QString iconDir = dir + "/icons";
+        QString iconDir = dir + QStringLiteral("/icons");
         if (QDir(iconDir).exists()) {
             iconDirs.append(iconDir);
         }
     }
 
     for (const QString &dir : dataDirs) {
-        QString pixmapsDir = dir + "/pixmaps";
+        QString pixmapsDir = dir + QStringLiteral("/pixmaps");
         if (QDir(pixmapsDir).exists()) {
             iconDirs.append(pixmapsDir);
         }
@@ -131,22 +132,22 @@ QString findDesktopFile(const QString &appId)
 
     // Search patterns in priority order
     QStringList patterns = {
-        appId + ".desktop",
-        appId.toLower() + ".desktop",
-        "*" + appId.toLower() + "*.desktop"
+        appId + QStringLiteral(".desktop"),
+        appId.toLower() + QStringLiteral(".desktop"),
+        QStringLiteral("*") + appId.toLower() + QStringLiteral("*.desktop")
     };
 
-    QStringList prefixes = {
-        "applications/",
-        "applications/kde/",
-        "applications/org.kde."
+    static const QStringList prefixes = {
+        QStringLiteral("applications/"),
+        QStringLiteral("applications/kde/"),
+        QStringLiteral("applications/org.kde.")
     };
 
     QStringList candidates;
 
     for (const QString &dir : dataDirs) {
         for (const QString &prefix : prefixes) {
-            QString searchDir = dir + "/" + prefix;
+            QString searchDir = dir + QStringLiteral("/") + prefix;
             QDir directory(searchDir);
 
             if (!directory.exists()) continue;
@@ -195,7 +196,7 @@ QString parseIconFromDesktopFile(const QString &desktopFilePath)
             continue;
         }
 
-        if (line == "[Desktop Entry]") {
+        if (line == QStringLiteral("[Desktop Entry]")) {
             inDesktopEntry = true;
             continue;
         }
@@ -209,7 +210,7 @@ QString parseIconFromDesktopFile(const QString &desktopFilePath)
         }
 
         // Look for Icon= key in Desktop Entry section
-        if (inDesktopEntry && line.startsWith("Icon=")) {
+        if (inDesktopEntry && line.startsWith(QStringLiteral("Icon="))) {
             iconValue = line.mid(5).trimmed();
             break;
         }
@@ -235,7 +236,7 @@ QString resolveIconPath(const QString &iconValue, const QString &desktopFileDir)
 
     // If it contains '/' but doesn't start with it, make it absolute relative to desktop file
     if (iconValue.contains('/')) {
-        QString absolutePath = desktopFileDir + "/" + iconValue;
+        QString absolutePath = desktopFileDir + QStringLiteral("/") + iconValue;
         QFileInfo fileInfo(absolutePath);
         if (fileInfo.isFile()) {
             return fileInfo.canonicalFilePath();
@@ -259,18 +260,45 @@ QString findIconInTheme(const QString &iconName)
     }
 
     // Fallback themes
-    themes.append({"hicolor", "breeze", "Adwaita", "gnome", "oxygen", "Papirus"});
+    themes.append({
+        QStringLiteral("hicolor"),
+        QStringLiteral("breeze"),
+        QStringLiteral("Adwaita"),
+        QStringLiteral("gnome"),
+        QStringLiteral("oxygen"),
+        QStringLiteral("Papirus")
+    });
     themes.removeDuplicates();
 
     // Common sizes to try (prefer larger icons)
-    QStringList sizes = {"scalable", "512x512", "256x256", "128x128", "96x96",
-                         "64x64", "48x48", "32x32", "24x24", "16x16"};
+    static const QStringList sizes = {
+        QStringLiteral("scalable"),
+        QStringLiteral("512x512"),
+        QStringLiteral("256x256"),
+        QStringLiteral("128x128"),
+        QStringLiteral("96x96"),
+        QStringLiteral("64x64"),
+        QStringLiteral("48x48"),
+        QStringLiteral("32x32"),
+        QStringLiteral("24x24"),
+        QStringLiteral("16x16")
+    };
 
     // Common contexts
-    QStringList contexts = {"apps", "applications", "mimetypes", "places", "devices"};
+    static const QStringList contexts = {
+        QStringLiteral("apps"),
+        QStringLiteral("applications"),
+        QStringLiteral("mimetypes"),
+        QStringLiteral("places"),
+        QStringLiteral("devices")
+    };
 
     // Common extensions
-    QStringList extensions = {".svg", ".png", ".xpm"};
+    static const QStringList extensions = {
+        QStringLiteral(".svg"),
+        QStringLiteral(".png"),
+        QStringLiteral(".xpm")
+    };
 
     // Icon name variants (case-insensitive)
     QStringList iconVariants = {
@@ -292,7 +320,7 @@ QString findIconInTheme(const QString &iconName)
                 for (const QString &context : contexts) {
                     for (const QString &variant : iconVariants) {
                         for (const QString &ext : extensions) {
-                            QString result = checkPath(QString("%1/%2/%3/%4/%5%6")
+                            QString result = checkPath(QStringLiteral("%1/%2/%3/%4/%5%6")
                                 .arg(iconDir, theme, size, context, variant, ext));
                             if (!result.isEmpty()) return result;
                         }
@@ -302,10 +330,10 @@ QString findIconInTheme(const QString &iconName)
         }
 
         // Direct pixmaps check
-        if (iconDir.endsWith("/pixmaps")) {
+        if (iconDir.endsWith(QStringLiteral("/pixmaps"))) {
             for (const QString &variant : iconVariants) {
                 for (const QString &ext : extensions) {
-                    QString result = checkPath(iconDir + "/" + variant + ext);
+                    QString result = checkPath(iconDir + QStringLiteral("/") + variant + ext);
                     if (!result.isEmpty()) return result;
                 }
             }
