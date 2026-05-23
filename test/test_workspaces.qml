@@ -11,6 +11,10 @@ ApplicationWindow {
 
     property string outputName
 
+    // Tracks the result of the most recent action attempt.
+    // null = no attempt yet, "" = success, non-empty = error message.
+    property var lastActionResult: null
+
     Niri {
         id: niri
         Component.onCompleted: connect()
@@ -28,8 +32,8 @@ ApplicationWindow {
         }
 
         onErrorOccurred: function(error) {
-            console.log("✗ Error:", error)
-            statusText.text = "Error: " + error
+            console.log("✗ Connection error:", error)
+            statusText.text = "Connection error: " + error
             statusText.color = "red"
         }
     }
@@ -58,6 +62,26 @@ ApplicationWindow {
                 id: statusText
                 text: "Connecting..."
                 font.bold: true
+            }
+
+            // Last action result indicator
+            Rectangle {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth: actionResultText.implicitWidth + 10
+                visible: lastActionResult !== null
+                radius: 3
+                color: lastActionResult === "" ? "#E8F5E9" : "#FFEBEE"
+                border.width: 1
+                border.color: lastActionResult === "" ? "#4CAF50" : "#F44336"
+
+                Text {
+                    id: actionResultText
+                    anchors.centerIn: parent
+                    font.pixelSize: 11
+                    text: lastActionResult === "" ? "✓ Action OK"
+                                                  : "✗ " + lastActionResult
+                    color: lastActionResult === "" ? "#2E7D32" : "#C62828"
+                }
             }
 
             Item { Layout.fillWidth: true }
@@ -131,7 +155,8 @@ ApplicationWindow {
 
                     onClicked: {
                         console.log("Switching to workspace", model.index, "(ID:", model.id + ")")
-                        niri.focusWorkspaceById(model.id)
+                        const r = niri.focusWorkspaceById(model.id)
+                        lastActionResult = r.ok ? "" : r.error
                     }
                 }
 

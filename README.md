@@ -109,7 +109,9 @@ Item {
         
         onConnected: console.log("Connected to niri")
         onErrorOccurred: function(error) {
-            console.error("Error:", error)
+            // Emitted only for connection-level failures (socket disconnect,
+            // event stream subscription failure).
+            console.error("Connection error:", error)
         }
     }
 }
@@ -313,6 +315,31 @@ niri.closeWindow(windowId)
 niri.closeWindowOrFocused()         // Close focused window
 ```
 
+Other:
+```qml
+niri.toggleOverview()               // Show or hide the workspace overview
+```
+
+
+### Action results and error handling
+
+All action methods return a result object describing the outcome:
+
+```qml
+const result = niri.focusWorkspace(1)
+if (!result.ok) {
+    console.error("Failed to focus workspace:", result.error)
+}
+```
+
+The result object has the shape:
+- `ok: bool` - `true` on success, `false` on failure
+- `error: string` - Error message (only present when `ok` is `false`)
+
+Failures include "not connected", IPC write/read errors, and action rejections from niri itself. Callers that don't care about the result can simply ignore the return value.
+
+Note that per-action failures are **not** reported via the `errorOccurred` signal. That signal is reserved for connection-level problems such as socket disconnects or event stream subscription failures.
+
 
 ## Testing
 
@@ -344,18 +371,21 @@ Pull requests to improve the testing situation, add unit tests, etc., are very w
 *Methods:*
 - `connect()`: bool - Connect to niri IPC socket
 - `isConnected()`: bool - Check connection status
-- `focusWorkspace(index)` - Focus workspace by index
-- `focusWorkspaceById(id)` - Focus workspace by ID
-- `focusWorkspaceByName(name)` - Focus workspace by name
-- `focusWindow(id)` - Focus specific window
-- `closeWindow(id)` - Close specific window
-- `closeWindowOrFocused()` - Close focused window
-- `toggleOverview()` - Shows or hides the workspace overview
+- `focusWorkspace(index)`: object - Focus workspace by index
+- `focusWorkspaceById(id)`: object - Focus workspace by ID
+- `focusWorkspaceByName(name)`: object - Focus workspace by name
+- `focusWindow(id)`: object - Focus specific window
+- `closeWindow(id)`: object - Close specific window
+- `closeWindowOrFocused()`: object - Close focused window
+- `toggleOverview()`: object - Show or hide the workspace overview
+
+All action methods return a result object of the form `{ ok: bool, error?: string }`.
+See [Action results and error handling](#action-results-and-error-handling).
 
 *Signals:*
 - `connected()` - Emitted on successful connection
 - `disconnected()` - Emitted on disconnection
-- `errorOccurred(error)` - Emitted on error
+- `errorOccurred(error)` - Emitted on connection-level failures only
 - `rawEventReceived(event)` - Emitted for all IPC events
 - `focusedWindowChanged()` - Emitted when focused window changes or its properties update
 

@@ -1,5 +1,6 @@
 #include <QDebug>
 #include <QJsonObject>
+#include <QVariantMap>
 #include "niri.h"
 #include "logging.h"
 
@@ -51,7 +52,17 @@ bool Niri::isConnected() const
     return m_ipcClient->isConnected();
 }
 
-void Niri::focusWorkspace(int index)
+QVariantMap Niri::okResult()
+{
+    return QVariantMap{{"ok", true}};
+}
+
+QVariantMap Niri::errResult(const QString &error)
+{
+    return QVariantMap{{"ok", false}, {"error", error}};
+}
+
+QVariantMap Niri::focusWorkspace(int index)
 {
     QJsonObject reference;
     reference["Index"] = index;
@@ -59,10 +70,10 @@ void Niri::focusWorkspace(int index)
     QJsonObject action;
     action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::focusWorkspaceById(quint64 id)
+QVariantMap Niri::focusWorkspaceById(quint64 id)
 {
     QJsonObject reference;
     reference["Id"] = QJsonValue::fromVariant(id);
@@ -70,10 +81,10 @@ void Niri::focusWorkspaceById(quint64 id)
     QJsonObject action;
     action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::focusWorkspaceByName(const QString &name)
+QVariantMap Niri::focusWorkspaceByName(const QString &name)
 {
     QJsonObject reference;
     reference["Name"] = name;
@@ -81,15 +92,15 @@ void Niri::focusWorkspaceByName(const QString &name)
     QJsonObject action;
     action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::focusWindow(quint64 id)
+QVariantMap Niri::focusWindow(quint64 id)
 {
     QJsonObject action;
     action["FocusWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
 Window* Niri::focusedWindow() const
@@ -97,15 +108,15 @@ Window* Niri::focusedWindow() const
     return m_windowModel->focusedWindow();
 }
 
-void Niri::closeWindow(quint64 id)
+QVariantMap Niri::closeWindow(quint64 id)
 {
     QJsonObject action;
     action["CloseWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::closeWindowOrFocused(quint64 id)
+QVariantMap Niri::closeWindowOrFocused(quint64 id)
 {
     QJsonObject action;
     if (id == 0) {
@@ -114,22 +125,21 @@ void Niri::closeWindowOrFocused(quint64 id)
         action["CloseWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
     }
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::toggleOverview()
+QVariantMap Niri::toggleOverview()
 {
     QJsonObject action;
     action["ToggleOverview"] = QJsonObject{};
 
-    sendAction(action);
+    return sendAction(action);
 }
 
-void Niri::sendAction(const QJsonObject &action)
+QVariantMap Niri::sendAction(const QJsonObject &action)
 {
     if (!isConnected()) {
-        emit errorOccurred(QStringLiteral("Cannot send action: not connected to niri"));
-        return;
+        return errResult(QStringLiteral("Cannot send action: not connected to niri"));
     }
 
     QJsonObject request;
@@ -137,6 +147,8 @@ void Niri::sendAction(const QJsonObject &action)
 
     QString err;
     if (!m_ipcClient->sendRequest(request, &err)) {
-        emit errorOccurred(err.isEmpty() ? QStringLiteral("Unknown IPC error") : err);
+        return errResult(err.isEmpty() ? QStringLiteral("Unknown IPC error") : err);
     }
+
+    return okResult();
 }
