@@ -6,6 +6,19 @@
 #include "logging.h"
 #include "windowmodel.h"
 
+static const QList<int> layoutRoles = {
+    WindowModel::ColumnIndexRole,
+    WindowModel::TileIndexRole,
+    WindowModel::TileWidthRole,
+    WindowModel::TileHeightRole,
+    WindowModel::WindowWidthRole,
+    WindowModel::WindowHeightRole,
+    WindowModel::TilePosXRole,
+    WindowModel::TilePosYRole,
+    WindowModel::WindowOffsetXRole,
+    WindowModel::WindowOffsetYRole
+};
+
 WindowModel::WindowModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -163,33 +176,41 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
 
 void WindowModel::handleWindowOpenedOrChanged(const QJsonObject &windowObj)
 {
-    Window *window = parseWindow(windowObj);
-    int idx = findWindowIndex(window->id);
+    const quint64 id = windowObj["id"].toInteger();
+    const int idx = findWindowIndex(id);
+
+    Window *window = nullptr;
+    bool focusMayHaveChanged = false;
 
     if (idx == -1) {
-        // New window
+        // New window.
+        window = parseWindow(windowObj);
         beginInsertRows(QModelIndex(), m_windows.count(), m_windows.count());
         m_windows.append(window);
         endInsertRows();
         emit countChanged();
+        focusMayHaveChanged = window->isFocused;
     } else {
-        // Replace existing window pointer. This deallocates and reallocates even for
-        // minor changes (e.g. title updates), but avoids property-by-property copying.
-        delete m_windows[idx];
-        m_windows[idx] = window;
-        QModelIndex modelIdx = index(idx);
-        emit dataChanged(modelIdx, modelIdx);
+        // Existing window: mutate in place so held QML handles stay valid.
+        window = m_windows[idx];
+        const QList<int> changedRoles = updateWindow(window, windowObj);
+        if (!changedRoles.isEmpty()) {
+            const QModelIndex modelIdx = index(idx);
+            emit dataChanged(modelIdx, modelIdx, changedRoles);
+        }
+        focusMayHaveChanged = changedRoles.contains(IsFocusedRole);
     }
 
-    // If this window is focused, update all other windows
+    // If this window claims focus, clear focus from any other window so the
+    // single-focus invariant holds even when WindowFocusChanged hasn't arrived.
+    // Clearing a stale focus elsewhere changes focusedWindow() even if this
+    // window's own focus role was unchanged, so track that too.
+    bool clearedOtherFocus = false;
     if (window->isFocused) {
-        for (int i = 0; i < m_windows.count(); ++i) {
-            if (m_windows[i]->id != window->id && m_windows[i]->isFocused) {
-                m_windows[i]->isFocused = false;
-                QModelIndex modelIdx = index(i);
-                emit dataChanged(modelIdx, modelIdx, {IsFocusedRole});
-            }
-        }
+        clearedOtherFocus = clearOtherFocus(window->id);
+    }
+
+    if (focusMayHaveChanged || clearedOtherFocus) {
         emit focusedWindowChanged();
     }
 }
@@ -248,19 +269,6 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
 
 void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 {
-    static const QList<int> layoutRoles = {
-        ColumnIndexRole,
-        TileIndexRole,
-        TileWidthRole,
-        TileHeightRole,
-        WindowWidthRole,
-        WindowHeightRole,
-        TilePosXRole,
-        TilePosYRole,
-        WindowOffsetXRole,
-        WindowOffsetYRole
-    };
-
     for (const QJsonValue &changeValue : changes) {
         const QJsonArray change = changeValue.toArray();
         const quint64 id = change.at(0).toInteger();
@@ -332,4 +340,87 @@ int WindowModel::findWindowIndex(quint64 id) const
             return i;
     }
     return -1;
+}
+
+// Updates `win` in place from `obj`, emitting per-property NOTIFY signals
+// for any field that actually changed. Returns the set of model roles that
+// changed, so the caller can emit a targeted dataChanged().
+QList<int> WindowModel::updateWindow(Window *win, const QJsonObject &obj)
+{
+    QList<int> changedRoles;
+
+    const QString title = obj["title"].toString();
+    if (win->title != title) {
+        win->title = title;
+        emit win->titleChanged();
+        changedRoles.append(TitleRole);
+    }
+
+    const QJsonValue wsValue = obj["workspace_id"];
+    const quint64 workspaceId = wsValue.isNull() ? 0 : wsValue.toInteger();
+    if (win->workspaceId != workspaceId) {
+        win->workspaceId = workspaceId;
+        emit win->workspaceIdChanged();
+        changedRoles.append(WorkspaceIdRole);
+    }
+
+    const bool isFocused = obj["is_focused"].toBool();
+    if (win->isFocused != isFocused) {
+        win->isFocused = isFocused;
+        emit win->isFocusedChanged();
+        changedRoles.append(IsFocusedRole);
+    }
+
+    const bool isFloating = obj["is_floating"].toBool();
+    if (win->isFloating != isFloating) {
+        win->isFloating = isFloating;
+        emit win->isFloatingChanged();
+        changedRoles.append(IsFloatingRole);
+    }
+
+    const bool isUrgent = obj["is_urgent"].toBool();
+    if (win->isUrgent != isUrgent) {
+        win->isUrgent = isUrgent;
+        emit win->isUrgentChanged();
+        changedRoles.append(IsUrgentRole);
+    }
+
+    // Layout: reuse the existing parser, then detect change as a group.
+    // Snapshot the fields we treat as "layout" to decide whether to notify.
+    const auto layoutSnapshot = [](const Window *w) {
+        return std::make_tuple(w->columnIndex, w->tileIndex,
+                               w->tileWidth, w->tileHeight,
+                               w->windowWidth, w->windowHeight,
+                               w->tilePosX, w->tilePosY,
+                               w->windowOffsetX, w->windowOffsetY);
+    };
+    const auto before = layoutSnapshot(win);
+    parseWindowLayout(win, obj["layout"].toObject());
+    if (layoutSnapshot(win) != before) {
+        emit win->layoutChanged();
+        changedRoles.append(layoutRoles);
+    }
+
+    // id, appId, pid, iconPath are immutable; not handled here.
+    return changedRoles;
+}
+
+// Clears the isFocused flag on every window except `focusedId`, emitting the
+// per-window NOTIFY and a targeted dataChanged() for each one cleared. This
+// enforces the single-focus invariant when a window claims focus before a
+// WindowFocusChanged event arrives. Returns true if any window was cleared,
+// so the caller knows whether the focused-window result actually changed.
+bool WindowModel::clearOtherFocus(quint64 focusedId)
+{
+    bool cleared = false;
+    for (int i = 0; i < m_windows.count(); ++i) {
+        if (m_windows[i]->id != focusedId && m_windows[i]->isFocused) {
+            m_windows[i]->isFocused = false;
+            emit m_windows[i]->isFocusedChanged();
+            const QModelIndex modelIdx = index(i);
+            emit dataChanged(modelIdx, modelIdx, {IsFocusedRole});
+            cleared = true;
+        }
+    }
+    return cleared;
 }

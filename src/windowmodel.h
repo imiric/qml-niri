@@ -10,14 +10,16 @@ class Window : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
+    QML_UNCREATABLE("Window objects are owned by WindowModel")
+
     Q_PROPERTY(quint64 id MEMBER id CONSTANT)
-    Q_PROPERTY(QString title MEMBER title CONSTANT)
+    Q_PROPERTY(QString title MEMBER title NOTIFY titleChanged)
     Q_PROPERTY(QString appId MEMBER appId CONSTANT)
     Q_PROPERTY(qint32 pid MEMBER pid CONSTANT)
-    Q_PROPERTY(quint64 workspaceId MEMBER workspaceId CONSTANT)
-    Q_PROPERTY(bool isFocused MEMBER isFocused CONSTANT)
-    Q_PROPERTY(bool isFloating MEMBER isFloating CONSTANT)
-    Q_PROPERTY(bool isUrgent MEMBER isUrgent CONSTANT)
+    Q_PROPERTY(quint64 workspaceId MEMBER workspaceId NOTIFY workspaceIdChanged)
+    Q_PROPERTY(bool isFocused MEMBER isFocused NOTIFY isFocusedChanged)
+    Q_PROPERTY(bool isFloating MEMBER isFloating NOTIFY isFloatingChanged)
+    Q_PROPERTY(bool isUrgent MEMBER isUrgent NOTIFY isUrgentChanged)
     Q_PROPERTY(qint32 columnIndex MEMBER columnIndex NOTIFY layoutChanged)
     Q_PROPERTY(qint32 tileIndex MEMBER tileIndex NOTIFY layoutChanged)
     Q_PROPERTY(qreal tileWidth MEMBER tileWidth NOTIFY layoutChanged)
@@ -62,6 +64,11 @@ public:
     QString iconPath;
 
 signals:
+    void titleChanged();
+    void workspaceIdChanged();
+    void isFocusedChanged();
+    void isFloatingChanged();
+    void isUrgentChanged();
     void layoutChanged();
 };
 
@@ -119,6 +126,8 @@ private:
     void handleWindowUrgencyChanged(quint64 id, bool urgent);
     void handleWindowLayoutsChanged(const QJsonArray &changes);
     void parseWindowLayout(Window *window, const QJsonObject &layoutObj);
+    QList<int> updateWindow(Window *win, const QJsonObject &obj);
+    bool clearOtherFocus(quint64 focusedId);
 
     Window* parseWindow(const QJsonObject &obj);
     int findWindowIndex(quint64 id) const;
