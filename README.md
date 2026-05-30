@@ -92,7 +92,7 @@ Import the plugin and create a Niri instance:
 
 ```qml
 import QtQuick
-import Niri 0.1
+import Niri
 
 Item {
     Niri {
@@ -340,7 +340,7 @@ This project started because I wanted to integrate niri with [Quickshell](https:
 ```qml
 import Quickshell
 import QtQuick
-import Niri 0.1
+import Niri
 
 ShellRoot {
     PanelWindow {

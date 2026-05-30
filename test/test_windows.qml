@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Niri 0.1
+import Niri
 
 ApplicationWindow {
     visible: true
