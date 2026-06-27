@@ -1,5 +1,5 @@
 import QtQuick
-import Niri 0.1
+import Niri
 
 Niri {
     Component.onCompleted: connect()

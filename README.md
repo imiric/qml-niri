@@ -1,16 +1,6 @@
 # qml-niri
 
-A QML plugin for interacting with the [niri](https://github.com/YaLTeR/niri) Wayland compositor via its IPC protocol.
-
-<details>
-  <summary>Why?</summary>
-
-I really like the niri compositor/WM, but there are no good integrations for it for building UI widgets, status bars, etc. There are several options mentioned in the [awesome-niri](https://github.com/Vortriz/awesome-niri) list, but none of them are great IMO.
-
-[Quickshell](https://quickshell.outfoxxed.me/) and Qt Quick stand out above the rest, but it currently only supports Hyprland. There is interest in adding [support for niri](https://github.com/quickshell-mirror/quickshell/issues/47), but the feature is blocked by the author's desire for compositors to implement a set of [generic Wayland protocols](https://github.com/quickshell-mirror/shell-protocols), which is in progress for niri. This is understandable, as it would avoid projects like Quickshell having to add support for custom IPC protocols of each compositor, but in the meantime, niri users are left without a good solution. If, and when, Quickshell officially supports niri via these generic protocols, there will likely be little need for qml-niri to exist.
-
-The [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) project uses Quickshell and integrates with niri, but it is too complex and fancy for my personal needs. Extracting their [`NiriService`](https://github.com/AvengeMedia/DankMaterialShell/blob/a17343f40e2c2788d775aef08e55f73ce6e20ae2/Services/NiriService.qml) could've been an option, but I'd rather keep my QML configuration simple, with the IPC implementation at a lower level.
-</details>
+A QML plugin for interacting with the [niri](https://github.com/niri-wm/niri) Wayland compositor via its IPC protocol.
 
 
 ## Features
@@ -27,12 +17,12 @@ The [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) projec
 - Qt 6 (Core, GUI, and QML modules)
 - CMake 3.16 or newer
 - C++17 compatible compiler
-- A recent version of niri (tested with v25.11)
+- A recent version of niri (tested with v26.04)
 
 
 ## Disclaimer
 
-The author is an experienced programmer, but not with C++ or Qt. Most of this project was written with the assistance of LLM tools such as Claude Sonnet 4.5. That said, **nothing was "vibe-coded", and all code was carefully reviewed and tested**.
+The author is an experienced programmer, but not with C++ or Qt. Most of this project was written with the assistance of Large Language Models. That said, **nothing was "vibe-coded", and all code was carefully reviewed and tested**.
 
 If you do run into any issues, or have improvement suggestions, creating a [GitHub issue](https://github.com/imiric/qml-niri/issues) would be appreciated.
 
@@ -94,22 +84,24 @@ Alternatively, you can set the `QML_IMPORT_PATH` environment variable to include
 
 ## Usage
 
+This section walks through common tasks with runnable examples. For an exhaustive list of every property, method, signal, and model role, see the [API Reference](#api-reference).
+
 ### Basic setup
 
 Import the plugin and create a Niri instance:
 
 ```qml
 import QtQuick
-import Niri 0.1
+import Niri
 
 Item {
     Niri {
         id: niri
         Component.onCompleted: connect()
-        
+
         onConnected: console.log("Connected to niri")
         onErrorOccurred: function(error) {
-            console.error("Error:", error)
+            console.error("Connection error:", error)
         }
     }
 }
@@ -118,78 +110,24 @@ Item {
 > [!NOTE]
 > This requires the `NIRI_SOCKET` environment variable to be set with the path to a
 > valid Unix socket.
-> See the [niri IPC documentation](https://github.com/YaLTeR/niri/wiki/IPC) for details.
-
-
-### Logging
-
-The plugin will output informational and error messages by default. To enable verbose
-logging for troubleshooting, set the `QT_LOGGING_RULES` environment variable. E.g.:
-```shell
-export QT_LOGGING_RULES="niri.debug=true"
-```
-
-This will also show debug and warning messages for icon lookup, IPC communication, and event handling.
-
-
-### Working with workspaces
-
-Access workspace information via the `workspaces` model:
-
-```qml
-ListView {
-    model: niri.workspaces
-    delegate: Rectangle {
-        Text {
-            text: "Workspace " + model.index + 
-                  (model.isFocused ? " (focused)" : "")
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: niri.focusWorkspaceById(model.id)
-        }
-    }
-}
-```
-
-Available workspace properties:
-- `id`: Unique workspace identifier
-- `index`: Workspace position on its output
-- `name`: Optional workspace name
-- `output`: Output device name
-- `isActive`: Currently active on its output
-- `isFocused`: Currently focused workspace
-- `isUrgent`: Has windows requesting attention
-- `activeWindowId`: ID of the active window
-- `maxCount`: Maximum number of workspaces to expose (default: unlimited, shows all workspaces)
-
-#### Limiting workspace count
-
-You can limit the number of workspaces exposed by the model using the `maxCount` property. Only the first `maxCount` workspaces (after sorting) will be available:
-
-```qml
-Component.onCompleted: {
-    niri.workspaces.maxCount = 11
-}
-```
-
-This is useful for widget layouts that should only show a fixed number of workspaces.
+> See the [niri IPC documentation](https://github.com/niri-wm/niri/wiki/IPC) for details.
 
 
 ### Working with windows
 
-Access window information via the `windows` model:
+Access window information via the `windows` model. Each delegate exposes the window's
+properties as model roles (see [WindowModel roles](#windowmodel-roles)):
 
 ```qml
 ListView {
     model: niri.windows
     delegate: Rectangle {
         color: model.isFocused ? "lightblue" : "white"
-        
+
         Text {
             text: model.title + " (" + model.appId + ")"
         }
-        
+
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -205,58 +143,71 @@ ListView {
 }
 ```
 
-Available window properties:
-- `id`: Unique window identifier
-- `title`: Window title
-- `appId`: Application identifier
-- `pid`: Process ID (-1 if unavailable)
-- `workspaceId`: Current workspace ID
-- `isFocused`: Currently focused window
-- `isFloating`: Floating window state
-- `isUrgent`: Window urgency flag
-- `iconPath`: Absolute path to application icon (empty if not found)
+Focusing and closing:
+```qml
+niri.focusWindow(windowId)
+niri.closeWindow(windowId)
+niri.closeWindowOrFocused()         // Close focused window
+```
 
-#### Application icons
 
-Application icons are automatically looked up using XDG desktop entries, and can be rendered like so:
+### Working with workspaces
+
+Access workspace information via the `workspaces` model. Each delegate exposes the workspace's properties as model roles (see [WorkspaceModel roles](#workspacemodel-roles)):
 
 ```qml
 ListView {
-    model: niri.windows
+    model: niri.workspaces
     delegate: Rectangle {
-        RowLayout {
-            spacing: 5
-            
-            Image {
-                source: model.iconPath ? "file://" + model.iconPath : ""
-                sourceSize.width: 24
-                sourceSize.height: 24
-                visible: model.iconPath !== ""
-                smooth: true
-            }
-            
-            // Fallback for missing icons
-            Rectangle {
-                width: 24
-                height: 24
-                color: "#CCC"
-                visible: model.iconPath === ""
-                radius: 4
-            }
-            
-            Text {
-                text: model.title
-            }
+        Text {
+            text: "Workspace " + model.index +
+                  (model.isFocused ? " (focused)" : "")
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: niri.focusWorkspaceById(model.id)
         }
     }
 }
 ```
 
-If an icon is not found (e.g. for AppImage, Flatpak, Snap apps), you can manually place an SVG or PNG file in a general XDG path, such as `~/.local/share/icons/hicolor/scalable/apps`. Ensure that it's named after the application ID that niri reports (check with `niri msg pick-window`). Although a lowercase string, or having the name anywhere in the file name should work as well.
+Focusing:
+```qml
+niri.focusWorkspace(0)              // By index
+niri.focusWorkspaceById(12345)      // By ID
+niri.focusWorkspaceByName("code")   // By name
+```
 
-For example, for app ID "LibreWolf", the file `~/.local/share/icons/hicolor/scalable/apps/librewolf.svg` would be resolved.
 
-The implementation attempts to handle several path and naming variations, but it might not work in all scenarios, so a manual override is preferred over handling all scenarios correctly.
+#### Limiting workspace count
+
+You can limit the number of workspaces exposed by the model using the `maxCount` property. Only the first `maxCount` workspaces (after sorting) will be available:
+
+```qml
+Component.onCompleted: {
+    niri.workspaces.maxCount = 11
+}
+```
+
+This is useful for widget layouts that should only show a fixed number of workspaces.
+
+
+#### Querying the workspace model
+
+The `WorkspaceModel` provides two helper methods for looking up workspaces by their
+visible row or ID:
+
+```qml
+// Get a map of all role values for the workspace at visible row 0
+const ws = niri.workspaces.get(0)
+console.log(ws.name, ws.isFocused)
+
+// Find the visible row index for a workspace ID (-1 if hidden or not found)
+const row = niri.workspaces.indexOfId(12345)
+```
+
+Both account for `maxCount`: rows hidden by the limit are treated as out of range.
+
 
 ### Convenience properties
 
@@ -287,72 +238,99 @@ Text {
 }
 ```
 
-### Available methods
 
-Workspace control:
+### Action results and error handling
+
+All action methods return a result object describing the outcome:
+
 ```qml
-niri.focusWorkspace(0)              // By index
-niri.focusWorkspaceById(12345)      // By ID
-niri.focusWorkspaceByName("code")   // By name
+const result = niri.focusWorkspace(1)
+if (!result.ok) {
+    console.error("Failed to focus workspace:", result.error)
+}
 ```
 
-Window control:
+The result object has the shape:
+- `ok: bool` - `true` on success, `false` on failure
+- `error: string` - Error message (only present when `ok` is `false`)
+
+Failures include "not connected", IPC write/read errors, and action rejections from niri itself. Callers that don't care about the result can simply ignore the return value.
+
+Note that per-action failures are **not** reported via the `errorOccurred` signal. That signal is reserved for connection-level problems such as socket disconnects or event stream subscription failures.
+
+
+### Escape hatch: sendRawAction
+
+For actions not covered by the typed wrappers, `sendRawAction` lets you send an arbitrary niri [`Action`](https://docs.rs/niri-ipc/latest/niri_ipc/enum.Action.html) as a JSON-shaped object:
+
 ```qml
-niri.focusWindow(windowId)
-niri.closeWindow(windowId)
-niri.closeWindowOrFocused()         // Close focused window
+const result = niri.sendRawAction({
+    "FocusWorkspace": { "reference": { "Index": 2 } }
+})
+if (!result.ok) {
+    console.error(result.error)
+}
 ```
 
+Prefer the typed wrappers when available; `sendRawAction` performs no schema validation and will only report failures returned by niri itself.
 
-## Testing
 
-The plugin was mostly tested manually, using a few [integration tests](/test). You can run them with:
+### Application icons
 
-```bash
-# Test event stream
-just test events
+Application icons are automatically looked up using XDG desktop entries, and can be rendered like so:
 
-# Test workspace model
-just test workspaces
+```qml
+ListView {
+    model: niri.windows
+    delegate: Rectangle {
+        RowLayout {
+            spacing: 5
 
-# Test window model
-just test windows
+            Image {
+                source: model.iconPath ? "file://" + model.iconPath : ""
+                sourceSize.width: 24
+                sourceSize.height: 24
+                visible: model.iconPath !== ""
+                smooth: true
+            }
+
+            // Fallback for missing icons
+            Rectangle {
+                width: 24
+                height: 24
+                color: "#CCC"
+                visible: model.iconPath === ""
+                radius: 4
+            }
+
+            Text {
+                text: model.title
+            }
+        }
+    }
+}
 ```
 
-Pull requests to improve the testing situation, add unit tests, etc., are very welcome!
+If an icon is not found (e.g. for AppImage, Flatpak, Snap apps), you can manually place an SVG or PNG file in a general XDG path, such as `~/.local/share/icons/hicolor/scalable/apps`. Ensure that it's named after the application ID that niri reports (check with `niri msg pick-window`). Although a lowercase string, or having the name anywhere in the file name should work as well.
+
+For example, for app ID "LibreWolf", the file `~/.local/share/icons/hicolor/scalable/apps/librewolf.svg` would be resolved.
+
+The implementation attempts to handle several path and naming variations, but it might not work in all scenarios, so a manual override is preferred over handling all scenarios correctly.
 
 
-## API Reference
+### Logging
 
-### Niri Object
+The plugin will output informational and error messages by default. To enable verbose logging for troubleshooting, set the `QT_LOGGING_RULES` environment variable. E.g.:
+```shell
+export QT_LOGGING_RULES="niri.debug=true"
+```
 
-*Properties:*
-- `workspaces`: WorkspaceModel - List of all workspaces
-- `windows`: WindowModel - List of all windows
-- `focusedWindow`: Window - Currently focused window (null if none)
-- `overview`: Overview - Current state of overview (false if closed, true if open)
-
-*Methods:*
-- `connect()`: bool - Connect to niri IPC socket
-- `isConnected()`: bool - Check connection status
-- `focusWorkspace(index)` - Focus workspace by index
-- `focusWorkspaceById(id)` - Focus workspace by ID
-- `focusWorkspaceByName(name)` - Focus workspace by name
-- `focusWindow(id)` - Focus specific window
-- `closeWindow(id)` - Close specific window
-- `closeWindowOrFocused()` - Close focused window
-- `toggleOverview()` - Shows or hides the workspace overview
-
-*Signals:*
-- `connected()` - Emitted on successful connection
-- `disconnected()` - Emitted on disconnection
-- `errorOccurred(error)` - Emitted on error
-- `rawEventReceived(event)` - Emitted for all IPC events
-- `focusedWindowChanged()` - Emitted when focused window changes or its properties update
-- `overviewChanged()` - Emitted when the overview state changes
+This will also show debug and warning messages for icon lookup, IPC communication, and event handling.
 
 
-## Quickshell integration
+## Examples
+
+### Quickshell bar
 
 This project started because I wanted to integrate niri with [Quickshell](https://quickshell.outfoxxed.me/). So here is an example of a simple bar that showcases a niri workspaces switcher and the currently focused window title:
 
@@ -362,7 +340,7 @@ This project started because I wanted to integrate niri with [Quickshell](https:
 ```qml
 import Quickshell
 import QtQuick
-import Niri 0.1
+import Niri
 
 ShellRoot {
     PanelWindow {
@@ -449,11 +427,171 @@ should look something like this:
 For more elaborate examples, see my [quickshell-niri](https://github.com/imiric/quickshell-niri) project.
 
 
+## Testing
+
+The plugin is mostly tested manually, using a few [integration tests](/test). You can run them with:
+
+```bash
+# Test event stream
+just test events
+
+# Test workspace model
+just test workspaces
+
+# Test window model
+just test windows
+
+# Test arbitrary actions (sendRawAction)
+just test action
+```
+
+These test files are also useful examples of common patterns (e.g. sorting and filtering with `SortFilterProxyModel`).
+
+Pull requests to improve the testing situation, add unit tests, CI, etc., are very welcome!
+
+
+## API Reference
+
+The plugin exposes four QML types: `Niri` (the main entry point), `WorkspaceModel` and `WindowModel` (list models for the `workspaces` and `windows` properties), and `Window` (an individual window object). Only `Niri` is directly instantiable; the others are obtained via `Niri`'s properties.
+
+### Niri
+
+The main object. Connect to niri and issue actions through it.
+
+*Properties:*
+- `workspaces`: [WorkspaceModel](#workspacemodel) - List of all workspaces
+- `windows`: [WindowModel](#windowmodel) - List of all windows
+- `focusedWindow`: [Window](#window) - Currently focused window (`null` if none)
+
+*Methods:*
+- `connect()`: bool - Connect to the niri IPC socket. Returns `true` on success.
+- `isConnected()`: bool - Check connection status
+- `focusWorkspace(index)`: object - Focus workspace by index
+- `focusWorkspaceById(id)`: object - Focus workspace by ID
+- `focusWorkspaceByName(name)`: object - Focus workspace by name
+- `focusWindow(id)`: object - Focus specific window
+- `closeWindow(id)`: object - Close specific window
+- `closeWindowOrFocused(id = 0)`: object - Close the given window, or the focused window if `id` is `0` (the default)
+- `toggleOverview()`: object - Show or hide the workspace overview
+- `sendRawAction(action)`: object - Send an arbitrary niri Action
+
+All action methods (everything except `connect()` and `isConnected()`) return a result object of the form `{ ok: bool, error?: string }`. See [Action results and error handling](#action-results-and-error-handling).
+
+*Signals:*
+- `connected()` - Emitted on successful connection
+- `disconnected()` - Emitted on disconnection
+- `errorOccurred(error)` - Emitted on connection-level failures only (socket disconnect, event stream subscription failure)
+- `rawEventReceived(event)` - Emitted for all IPC events, with the raw event object
+- `focusedWindowChanged()` - Emitted when the focused window changes (including on model resets, focus loss when the focused window closes, and enforcement of the single-focus invariant)
+
+
+### WorkspaceModel
+
+A `QAbstractListModel` holding all workspaces, sorted by output name and then by index within each output. Accessed via `niri.workspaces`. Use it directly as a `model` for `ListView`/`Repeater`, where each delegate sees the [roles](#workspacemodel-roles) below.
+
+*Properties:*
+- `count`: int - Number of visible workspaces (capped by `maxCount`)
+- `maxCount`: int - Maximum number of workspaces to expose (default: unlimited; shows all workspaces). Only the first `maxCount` workspaces, after sorting, are visible.
+
+*Methods:*
+- `get(row)`: object - Returns a map of role-name → value for the workspace at the given visible row, or an empty map if `row` is out of range (`row < 0` or `row >= count`)
+- `indexOfId(id)`: int - Returns the visible row index for the workspace with the given ID, or `-1` if no such workspace exists or it is hidden by `maxCount`
+
+*Signals:*
+- `countChanged()` - Emitted when the number of visible workspaces changes
+- `maxCountChanged()` - Emitted when `maxCount` changes
+
+#### WorkspaceModel roles
+
+Available to delegates when using `WorkspaceModel` as a view model:
+- `id`: Unique workspace identifier
+- `index`: Workspace position on its output
+- `name`: Optional workspace name
+- `output`: Output device name
+- `isActive`: Currently active on its output
+- `isFocused`: Currently focused workspace
+- `isUrgent`: Has windows requesting attention
+- `activeWindowId`: ID of the active window (`0` if none)
+
+
+### WindowModel
+
+A `QAbstractListModel` holding all windows, sorted by window ID. Accessed via `niri.windows`. Use it directly as a `model` for `ListView`/`Repeater`, where each delegate sees the [roles](#windowmodel-roles) below.
+
+*Properties:*
+- `count`: int - Number of windows
+- `focusedWindow`: [Window](#window) - Currently focused window (`null` if none)
+
+*Signals:*
+- `countChanged()` - Emitted when the number of windows changes
+- `focusedWindowChanged()` - Emitted when the focused window changes
+
+#### WindowModel roles
+
+Available to delegates when using `WindowModel` as a view model. These mirror the [Window](#window) properties:
+- `id`: Unique window identifier
+- `title`: Window title
+- `appId`: Application identifier
+- `pid`: Process ID (`-1` if unavailable)
+- `workspaceId`: Current workspace ID
+- `isFocused`: Currently focused window
+- `isFloating`: Floating window state
+- `isUrgent`: Window urgency flag
+- `columnIndex`: Tiled window column index in niri's scrolling layout (1-based, `0` if unavailable)
+- `tileIndex`: Tiled window index within its column (1-based, `0` if unavailable)
+- `tileWidth`: Tile width in logical pixels (includes niri decorations like borders)
+- `tileHeight`: Tile height in logical pixels (includes niri decorations like borders)
+- `windowWidth`: Window visual geometry width in logical pixels (without niri decorations)
+- `windowHeight`: Window visual geometry height in logical pixels (without niri decorations)
+- `tilePosX`: Tile X position in current workspace view (`NaN` if unavailable)
+- `tilePosY`: Tile Y position in current workspace view (`NaN` if unavailable)
+- `windowOffsetX`: Window visual geometry X offset inside its tile
+- `windowOffsetY`: Window visual geometry Y offset inside its tile
+- `iconPath`: Absolute path to application icon (empty if not found)
+
+
+### Window
+
+An individual window object, owned by `WindowModel`. Not instantiable from QML; obtained via `niri.focusedWindow` or `niri.windows.focusedWindow`. Its properties match the [WindowModel roles](#windowmodel-roles).
+
+*Properties:*
+- `id`: quint64 - Unique window identifier (constant)
+- `title`: string - Window title
+- `appId`: string - Application identifier (constant)
+- `pid`: int - Process ID, `-1` if unavailable (constant)
+- `workspaceId`: quint64 - Current workspace ID
+- `isFocused`: bool - Currently focused window
+- `isFloating`: bool - Floating window state
+- `isUrgent`: bool - Window urgency flag
+- `columnIndex`: int - Tiled window column index (1-based, `0` if unavailable)
+- `tileIndex`: int - Tiled window index within its column (1-based, `0` if unavailable)
+- `tileWidth`: real - Tile width in logical pixels (includes niri decorations)
+- `tileHeight`: real - Tile height in logical pixels (includes niri decorations)
+- `windowWidth`: int - Window visual geometry width in logical pixels (without decorations)
+- `windowHeight`: int - Window visual geometry height in logical pixels (without decorations)
+- `tilePosX`: real - Tile X position in current workspace view (`NaN` if unavailable)
+- `tilePosY`: real - Tile Y position in current workspace view (`NaN` if unavailable)
+- `windowOffsetX`: real - Window visual geometry X offset inside its tile
+- `windowOffsetY`: real - Window visual geometry Y offset inside its tile
+- `iconPath`: string - Absolute path to application icon, empty if not found (constant)
+
+*Signals:*
+- `titleChanged()` - Emitted when the title changes
+- `workspaceIdChanged()` - Emitted when the window moves to a different workspace
+- `isFocusedChanged()` - Emitted when focus state changes
+- `isFloatingChanged()` - Emitted when floating state changes
+- `isUrgentChanged()` - Emitted when urgency changes
+- `layoutChanged()` - Emitted when any layout-related property (column/tile indices, sizes, positions, offsets) changes
+
+Properties marked *(constant)* never change for the lifetime of the window object
+and have no corresponding signal.
+
+
 ## Troubleshooting
 
 - `module "Niri" is not installed`:
   Ensure `QML_IMPORT_PATH` includes the directory containing the `Niri` directory (not the `Niri` directory itself), or that you copied to plugin to an existing QML import path (e.g. `/usr/lib64/qt6/qml/`).
-  
+
   Also, confirm that you're using Qt 6, and not older versions. You can do this with `qml --version`. If the Qt 6 binary is not on your `$PATH` (e.g. on Void Linux it is at `/usr/lib/qt6/bin/qml`), you can symlink it as `qml6` somewhere on your `$PATH`.
 
 - *Connection failed*:

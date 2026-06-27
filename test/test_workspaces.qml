@@ -1,13 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Niri 0.1
+import Niri
 
 ApplicationWindow {
     visible: true
     width: 600
     height: 400
     title: "Niri Workspaces Test"
+
+    property string outputName
+
+    // Tracks the result of the most recent action attempt.
+    // null = no attempt yet, "" = success, non-empty = error message.
+    property var lastActionResult: null
 
     Niri {
         id: niri
@@ -26,10 +32,22 @@ ApplicationWindow {
         }
 
         onErrorOccurred: function(error) {
-            console.log("✗ Error:", error)
-            statusText.text = "Error: " + error
+            console.log("✗ Connection error:", error)
+            statusText.text = "Connection error: " + error
             statusText.color = "red"
         }
+    }
+
+    SortFilterProxyModel {
+        id: workspacesProxy
+        model: niri.workspaces
+        filters: [
+            ValueFilter {
+                roleName: "output"
+                value: outputName
+                enabled: outputName !== "" // show all when empty
+            }
+        ]
     }
 
     ColumnLayout {
@@ -46,6 +64,26 @@ ApplicationWindow {
                 font.bold: true
             }
 
+            // Last action result indicator
+            Rectangle {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth: actionResultText.implicitWidth + 10
+                visible: lastActionResult !== null
+                radius: 3
+                color: lastActionResult === "" ? "#E8F5E9" : "#FFEBEE"
+                border.width: 1
+                border.color: lastActionResult === "" ? "#4CAF50" : "#F44336"
+
+                Text {
+                    id: actionResultText
+                    anchors.centerIn: parent
+                    font.pixelSize: 11
+                    text: lastActionResult === "" ? "✓ Action OK"
+                                                  : "✗ " + lastActionResult
+                    color: lastActionResult === "" ? "#2E7D32" : "#C62828"
+                }
+            }
+
             Item { Layout.fillWidth: true }
 
             Text {
@@ -60,6 +98,23 @@ ApplicationWindow {
             color: "#CCC"
         }
 
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Text {
+                text: "Output filter:"
+                font.bold: true
+            }
+
+            TextField {
+                text: outputName
+                placeholderText: "e.g. eDP-1"
+                Layout.fillWidth: true
+                onTextChanged: outputName = text
+            }
+        }
+
         Text {
             text: "Click on a workspace to switch to it"
             font.pixelSize: 10
@@ -72,16 +127,16 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: niri.workspaces
+            model: workspacesProxy
             spacing: 5
             clip: true
 
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 80
+                height: 70
                 color: model.isFocused ? "#4CAF50" :
-                       model.isActive ? "#8BC34A" : "#E0E0E0"
-                border.color: model.isUrgent ? "red" : "#999"
+                       model.isActive ? "#8BC34A" : "#F5F5F5"
+                border.color: model.isUrgent ? "red" : "#CCC"
                 border.width: model.isUrgent ? 3 : 1
                 radius: 5
 
@@ -100,49 +155,46 @@ ApplicationWindow {
 
                     onClicked: {
                         console.log("Switching to workspace", model.index, "(ID:", model.id + ")")
-                        niri.focusWorkspaceById(model.id)
+                        const r = niri.focusWorkspaceById(model.id)
+                        lastActionResult = r.ok ? "" : r.error
                     }
                 }
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 10
+                    spacing: 2
 
                     RowLayout {
+                        spacing: 5
+
                         Text {
                             text: "Workspace " + model.index
-                            font.bold: true
+                            font.bold: model.isFocused
                             font.pixelSize: 14
+                            color: model.isFocused ? "white" : "black"
                         }
+
                         Text {
                             text: model.name || "(unnamed)"
                             font.italic: !model.name
-                            color: "#666"
+                            color: model.isFocused ? "white" : "#666"
                         }
-                    }
 
-                    RowLayout {
                         Text {
-                            text: "ID: " + model.id
-                            font.pixelSize: 10
-                            color: "#888"
+                            text: "● FOCUSED"
+                            font.bold: true
+                            color: "white"
+                            visible: model.isFocused
                         }
-                        Text {
-                            text: "Output: " + (model.output || "none")
-                            font.pixelSize: 10
-                        }
-                    }
 
-                    RowLayout {
-                        spacing: 10
                         Text {
-                            text: model.isFocused ? "● FOCUSED" :
-                                  model.isActive ? "○ ACTIVE" : "  inactive"
-                            font.bold: model.isFocused || model.isActive
-                            color: model.isFocused ? "white" :
-                                   model.isActive ? "#333" : "#999"
-                            font.pixelSize: 12
+                            text: "○ ACTIVE"
+                            font.bold: true
+                            color: "#333"
+                            visible: model.isActive && !model.isFocused
                         }
+
                         Text {
                             text: "⚠ URGENT"
                             color: "darkred"
@@ -151,11 +203,24 @@ ApplicationWindow {
                         }
                     }
 
+                    RowLayout {
+                        Text {
+                            text: "Output: " + (model.output || "none")
+                            font.pixelSize: 10
+                            color: model.isFocused ? "white" : "#666"
+                        }
+                        Text {
+                            text: "Active window ID: " +
+                                  (model.activeWindowId ? model.activeWindowId : "none")
+                            font.pixelSize: 10
+                            color: model.isFocused ? "white" : "#666"
+                        }
+                    }
+
                     Text {
-                        text: "Active Window: " +
-                              (model.activeWindowId ? model.activeWindowId : "none")
+                        text: `ID: ${model.id} | Index: ${model.index}`
                         font.pixelSize: 10
-                        color: "#888"
+                        color: model.isFocused ? "white" : "#888"
                     }
                 }
             }

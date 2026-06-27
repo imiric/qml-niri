@@ -42,6 +42,14 @@ public:
     int maxCount() const;
     void setMaxCount(int maxCount);
 
+    // Returns a map of role-name -> value for the workspace at the given
+    // visible row, or an empty map if row is out of range
+    // (row < 0 or row >= rowCount()).
+    Q_INVOKABLE QVariantMap get(int row) const;
+    // Returns the visible row index for the workspace with the given id,
+    // or -1 if no such workspace exists OR it is hidden by maxCount.
+    Q_INVOKABLE int indexOfId(quint64 id) const;
+
 public slots:
     void handleEvent(const QJsonObject &event);
 

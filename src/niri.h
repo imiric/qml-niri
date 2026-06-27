@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include <QVariantMap>
 #include "ipcclient.h"
 #include "workspacemodel.h"
 #include "windowmodel.h"
@@ -28,27 +29,50 @@ public:
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;
 
-    Q_INVOKABLE void focusWorkspace(int index);
-    Q_INVOKABLE void focusWorkspaceById(quint64 id);
-    Q_INVOKABLE void focusWorkspaceByName(const QString &name);
+    // Action methods.
+    //
+    // All action methods return a QVariantMap result of the form:
+    //   { "ok": true }                              on success
+    //   { "ok": false, "error": "<message>" }       on failure
+    //
+    // Failures include "not connected", IPC write/read errors, and
+    // action rejections from niri itself. Callers that don't care about
+    // the result can ignore the return value.
+    //
+    // Note: per-action failures are NOT emitted via errorOccurred.
+    // That signal is reserved for connection-level problems.
+    Q_INVOKABLE QVariantMap focusWorkspace(int index);
+    Q_INVOKABLE QVariantMap focusWorkspaceById(quint64 id);
+    Q_INVOKABLE QVariantMap focusWorkspaceByName(const QString &name);
 
-    Q_INVOKABLE void focusWindow(quint64 id);
-    Q_INVOKABLE void closeWindow(quint64 id);
-    Q_INVOKABLE void closeWindowOrFocused(quint64 id = 0);
+    Q_INVOKABLE QVariantMap focusWindow(quint64 id);
+    Q_INVOKABLE QVariantMap closeWindow(quint64 id);
+    Q_INVOKABLE QVariantMap closeWindowOrFocused(quint64 id = 0);
 
-    Q_INVOKABLE void toggleOverview();
+    Q_INVOKABLE QVariantMap toggleOverview();
+
+    // Escape hatch: send an arbitrary niri Action as a JSON-shaped map.
+    // The map must match niri's IPC Action schema. Prefer the typed
+    // wrappers above when available. See the note on the return shape
+    // above.
+    Q_INVOKABLE QVariantMap sendRawAction(const QVariantMap &action);
 
 
 signals:
     void connected();
     void disconnected();
+    // Emitted only for connection-level failures (socket disconnect,
+    // event stream subscription rejection). Per-action failures are
+    // reported via the return value of the action methods.
     void errorOccurred(const QString &error);
     void rawEventReceived(const QJsonObject &event);
     void focusedWindowChanged();
     void overviewChanged();
 
 private:
-    void sendAction(const QJsonObject &action);
+    QVariantMap sendAction(const QJsonObject &action);
+    static QVariantMap okResult();
+    static QVariantMap errResult(const QString &error);
 
     IPCClient *m_ipcClient = nullptr;
     OverviewState *m_overviewState = nullptr;

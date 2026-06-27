@@ -1,13 +1,17 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Niri 0.1
+import Niri
 
 ApplicationWindow {
     visible: true
     width: 800
     height: 600
     title: "Niri Windows Test"
+
+    // Tracks the result of the most recent action attempt.
+    // null = no attempt yet, "" = success, non-empty = error message.
+    property var lastActionResult: null
 
     Niri {
         id: niri
@@ -26,13 +30,28 @@ ApplicationWindow {
         }
 
         onErrorOccurred: function(error) {
-            console.log("✗ Error:", error)
-            statusText.text = "Error: " + error
+            console.log("✗ Connection error:", error)
+            statusText.text = "Connection error: " + error
             statusText.color = "red"
         }
 
         onFocusedWindowChanged: {
             console.log("Focused window changed:", niri.focusedWindow?.title)
+        }
+
+        readonly property SortFilterProxyModel sortedWindows: SortFilterProxyModel {
+            model: niri.windows
+            sorters: [
+                RoleSorter {
+                    roleName: "workspaceId"
+                },
+                RoleSorter {
+                    roleName: "columnIndex"
+                },
+                RoleSorter {
+                    roleName: "tileIndex"
+                }
+            ]
         }
     }
 
@@ -48,6 +67,26 @@ ApplicationWindow {
                 id: statusText
                 text: "Connecting..."
                 font.bold: true
+            }
+
+            // Last action result indicator
+            Rectangle {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth: actionResultText.implicitWidth + 10
+                visible: lastActionResult !== null
+                radius: 3
+                color: lastActionResult === "" ? "#E8F5E9" : "#FFEBEE"
+                border.width: 1
+                border.color: lastActionResult === "" ? "#4CAF50" : "#F44336"
+
+                Text {
+                    id: actionResultText
+                    anchors.centerIn: parent
+                    font.pixelSize: 11
+                    text: lastActionResult === "" ? "✓ Action OK"
+                                                  : "✗ " + lastActionResult
+                    color: lastActionResult === "" ? "#2E7D32" : "#C62828"
+                }
             }
 
             Item { Layout.fillWidth: true }
@@ -110,7 +149,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: niri.windows
+            model: niri.sortedWindows
             spacing: 5
             clip: true
 
@@ -139,10 +178,12 @@ ApplicationWindow {
                     onClicked: function(mouse) {
                         if (mouse.button === Qt.LeftButton) {
                             console.log("Focusing window", model.id, "-", model.title)
-                            niri.focusWindow(model.id)
+                            const r = niri.focusWindow(model.id)
+                            lastActionResult = r.ok ? "" : r.error
                         } else if (mouse.button === Qt.RightButton) {
                             console.log("Closing window", model.id, "-", model.title)
-                            niri.closeWindow(model.id)
+                            const r = niri.closeWindow(model.id)
+                            lastActionResult = r.ok ? "" : r.error
                         }
                     }
                 }
@@ -216,8 +257,16 @@ ApplicationWindow {
                     }
 
                     Text {
-                        text: "ID: " + model.id + " | Workspace: " +
-                              (model.workspaceId || "none")
+                        text: [
+                            `ID: ${model.id}`,
+                            `Workspace: ${model.workspaceId || "none"}`,
+                            `Size: ${model.windowWidth}x${model.windowHeight}`,
+                            `Column index: ${model.columnIndex}`,
+                            `Tile index: ${model.tileIndex}`,
+                            `Tile size: ${model.tileWidth}x${model.tileHeight}`,
+                            `Offset in tile: ${model.windowOffsetX},${model.windowOffsetY}`,
+                            `Tile position: ${model.tilePosX},${model.tilePosY}`
+                        ].join(" | ")
                         font.pixelSize: 10
                         color: model.isFocused ? "white" : "#888"
                     }

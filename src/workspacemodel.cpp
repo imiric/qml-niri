@@ -87,6 +87,24 @@ void WorkspaceModel::setMaxCount(int maxCount)
     emit maxCountChanged();
 }
 
+QVariantMap WorkspaceModel::get(int row) const
+{
+    QVariantMap map;
+    if (row < 0 || row >= rowCount())
+        return map;
+    const QModelIndex idx = index(row);
+    const QHash<int, QByteArray> roles = roleNames();
+    for (auto it = roles.cbegin(); it != roles.cend(); ++it)
+        map.insert(QString::fromUtf8(it.value()), data(idx, it.key()));
+    return map;
+}
+
+int WorkspaceModel::indexOfId(quint64 id) const
+{
+    int idx = findWorkspaceIndex(id);
+    return (idx >= 0 && idx < rowCount()) ? idx : -1;
+}
+
 void WorkspaceModel::handleEvent(const QJsonObject &event)
 {
     if (event.contains("WorkspacesChanged")) {

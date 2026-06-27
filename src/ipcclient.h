@@ -13,13 +13,17 @@ public:
     explicit IPCClient(QObject *parent = nullptr);
     ~IPCClient();
 
-    bool connect();
+    bool connect(QString *errorOut = nullptr);
     bool isConnected() const;
-    bool sendRequest(const QJsonObject &request);
+    bool sendRequest(const QJsonObject &request, QString *errorOut = nullptr);
 
 signals:
     void connected();
     void disconnected();
+    // Emitted only for connection-level problems: socket errors, unexpected
+    // disconnects, or failures of the initial EventStream subscription.
+    // Per-request failures are reported synchronously via sendRequest's return
+    // value and errorOut parameter, not through this signal.
     void errorOccurred(const QString &error);
     void eventReceived(const QJsonObject &event);
 
