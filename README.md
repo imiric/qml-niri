@@ -208,6 +208,15 @@ const row = niri.workspaces.indexOfId(12345)
 
 Both account for `maxCount`: rows hidden by the limit are treated as out of range.
 
+### Working with overview
+
+Access overview information via the `overview` model.
+
+```qml
+// Change object properties based on the current overview state
+color: niri.overview.isOpen ? "#000000" : "#FFFFFF"
+```
+
 
 ### Convenience properties
 
@@ -452,7 +461,7 @@ Pull requests to improve the testing situation, add unit tests, CI, etc., are ve
 
 ## API Reference
 
-The plugin exposes four QML types: `Niri` (the main entry point), `WorkspaceModel` and `WindowModel` (list models for the `workspaces` and `windows` properties), and `Window` (an individual window object). Only `Niri` is directly instantiable; the others are obtained via `Niri`'s properties.
+The plugin exposes five QML types: `Niri` (the main entry point), `WorkspaceModel` and `WindowModel` (list models for the `workspaces` and `windows` properties), `Window` (an individual window object) and `Overview` (an object representing the current overview state). Only `Niri` is directly instantiable; the others are obtained via `Niri`'s properties.
 
 ### Niri
 
@@ -462,6 +471,7 @@ The main object. Connect to niri and issue actions through it.
 - `workspaces`: [WorkspaceModel](#workspacemodel) - List of all workspaces
 - `windows`: [WindowModel](#windowmodel) - List of all windows
 - `focusedWindow`: [Window](#window) - Currently focused window (`null` if none)
+- `overview`: [Overview](#overview) - Current overview component state
 
 *Methods:*
 - `connect()`: bool - Connect to the niri IPC socket. Returns `true` on success.
@@ -586,6 +596,15 @@ An individual window object, owned by `WindowModel`. Not instantiable from QML; 
 Properties marked *(constant)* never change for the lifetime of the window object
 and have no corresponding signal.
 
+### Overview
+
+An object representing the state of niri's workspace overview. Owned by `Niri` and accessed via `niri.overview`.
+
+*Properties:*
+- `isOpen`: bool - Whether the overview interface is currently active/open.
+
+*Signals:*
+- `isOpenChanged()` - Emitted when the overview is opened or closed.
 
 ## Troubleshooting
 
