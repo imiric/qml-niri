@@ -4,7 +4,7 @@
 #include <QJsonObject>
 #include <QQmlEngine>
 
-class OverviewState : public QObject
+class Overview : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
@@ -12,7 +12,7 @@ class OverviewState : public QObject
     Q_PROPERTY(bool isOpen MEMBER isOpen NOTIFY isOpenChanged)
 
 public:
-    explicit OverviewState(QObject *parent = nullptr);
+    explicit Overview(QObject *parent = nullptr);
 
 public slots:
     void handleEvent(const QJsonObject &event);

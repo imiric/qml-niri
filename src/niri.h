@@ -6,7 +6,7 @@
 #include "ipcclient.h"
 #include "workspacemodel.h"
 #include "windowmodel.h"
-#include "overviewmodel.h"
+#include "overview.h"
 
 class Niri : public QObject
 {
@@ -15,7 +15,7 @@ class Niri : public QObject
     Q_PROPERTY(WorkspaceModel* workspaces READ workspaces CONSTANT)
     Q_PROPERTY(WindowModel* windows READ windows CONSTANT)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
-    Q_PROPERTY(OverviewState* overview READ overview CONSTANT)
+    Q_PROPERTY(Overview* overview READ overview CONSTANT)
 
 public:
     explicit Niri(QObject *parent = nullptr);
@@ -24,7 +24,7 @@ public:
     WorkspaceModel* workspaces() const { return m_workspaceModel; }
     WindowModel* windows() const { return m_windowModel; }
     Window* focusedWindow() const;
-    OverviewState* overview() const { return m_overviewState; }
+    Overview* overview() const { return m_overview; }
 
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;
@@ -74,7 +74,7 @@ private:
     static QVariantMap errResult(const QString &error);
 
     IPCClient *m_ipcClient = nullptr;
-    OverviewState *m_overviewState = nullptr;
+    Overview *m_overview = nullptr;
     WorkspaceModel *m_workspaceModel = nullptr;
     WindowModel *m_windowModel = nullptr;
 };
