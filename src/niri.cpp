@@ -29,17 +29,13 @@ Niri::Niri(QObject *parent)
     QObject::connect(m_ipcClient, &IPCClient::eventReceived,
                      m_windowModel, &WindowModel::handleEvent);
 
-    // Wire overview model
+    // Wire events to overview model
     QObject::connect(m_ipcClient, &IPCClient::eventReceived,
                  m_overviewState, &OverviewState::handleEvent);
 
     // Forward focused window changes
     QObject::connect(m_windowModel, &WindowModel::focusedWindowChanged,
                      this, &Niri::focusedWindowChanged);
-
-    // Forward overview changes
-    QObject::connect(m_overviewState, &OverviewState::overviewChanged, 
-                     this, &Niri::overviewChanged);
 
 }
 

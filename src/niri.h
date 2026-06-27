@@ -15,7 +15,7 @@ class Niri : public QObject
     Q_PROPERTY(WorkspaceModel* workspaces READ workspaces CONSTANT)
     Q_PROPERTY(WindowModel* windows READ windows CONSTANT)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
-    Q_PROPERTY(bool overview READ overview NOTIFY overviewChanged)
+    Q_PROPERTY(OverviewState* overview READ overview CONSTANT)
 
 public:
     explicit Niri(QObject *parent = nullptr);
@@ -24,7 +24,7 @@ public:
     WorkspaceModel* workspaces() const { return m_workspaceModel; }
     WindowModel* windows() const { return m_windowModel; }
     Window* focusedWindow() const;
-    bool overview() const;
+    OverviewState* overview() const { return m_overviewState; }
 
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;
@@ -67,7 +67,6 @@ signals:
     void errorOccurred(const QString &error);
     void rawEventReceived(const QJsonObject &event);
     void focusedWindowChanged();
-    void overviewChanged();
 
 private:
     QVariantMap sendAction(const QJsonObject &action);

@@ -1,29 +1,27 @@
-#include <QDebug>
-#include <QJsonArray>
 #include "overviewmodel.h"
 #include "logging.h"
 
 OverviewState::OverviewState(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), isOpen(false)
 {
-}
-
-bool OverviewState::isOpen() const
-{
-    return m_isOpen;
 }
 
 void OverviewState::handleEvent(const QJsonObject &event)
 {
     if (event.contains("OverviewOpenedOrClosed")) {
         QJsonObject overviewObj = event["OverviewOpenedOrClosed"].toObject();
+        handleOverviewOpenedOrClosed(overviewObj);
+    }
+}
+
+void OverviewState::handleOverviewOpenedOrClosed(const QJsonObject &obj)
+{
+    if (obj.contains("is_open")) {
+        bool open = obj["is_open"].toBool();
         
-        if (overviewObj.contains("is_open")) {
-            bool open = overviewObj["is_open"].toBool();
-            if (m_isOpen != open) {
-                m_isOpen = open;
-                emit overviewChanged();
-            }
+        if (isOpen != open) {
+            isOpen = open;
+            emit isOpenChanged();
         }
     }
 }

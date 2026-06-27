@@ -9,18 +9,20 @@ class OverviewState : public QObject
     Q_OBJECT
     QML_ELEMENT
     QML_UNCREATABLE("State is managed by the Niri IPC compositor")
-    Q_PROPERTY(bool isOpen READ isOpen NOTIFY overviewChanged)
+    Q_PROPERTY(bool isOpen MEMBER isOpen NOTIFY isOpenChanged)
 
 public:
     explicit OverviewState(QObject *parent = nullptr);
-    bool isOpen() const;
 
 public slots:
     void handleEvent(const QJsonObject &event);
 
 signals:
-    void overviewChanged();
+    void isOpenChanged();
+
+public:
+    bool isOpen;
 
 private:
-    bool m_isOpen = false;
+    void handleOverviewOpenedOrClosed(const QJsonObject &obj);
 };
