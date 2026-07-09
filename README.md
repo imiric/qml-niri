@@ -69,17 +69,39 @@ The `just build` command will create a `build` directory and compile the plugin.
 
 ### Installing system-wide
 
-After building, copy the plugin to your QML import path:
-
+After building, install the plugin with:
 ```bash
-# Find your QML import path
-qtpaths6 --qt-query QT_INSTALL_QML
-
-# Copy the plugin (adjust path as needed)
-sudo cp -r build/Niri /usr/lib64/qt6/qml/
+sudo just install
 ```
 
-Alternatively, you can set the `QML_IMPORT_PATH` environment variable to include the build directory when running your QML applications.
+This installs into your Qt QML import path under the `/usr` prefix (e.g. `/usr/lib64/qt6/qml/Niri`), which should work for most distributions.
+
+If your distribution uses a different prefix, pass it explicitly:
+```bash
+sudo just install /usr/local
+```
+
+You can check your QML import path with:
+```bash
+# Note: use the Qt6 qtpaths, which may not be on your PATH by default
+/usr/lib/qt6/bin/qtpaths --qt-query QT_INSTALL_QML
+```
+
+Alternatively, during development or to avoid a system-wide install, set the `QML_IMPORT_PATH` environment variable to include the build directory when running your QML application:
+```bash
+QML_IMPORT_PATH="$PWD/build" <your-qml-command>
+```
+
+### Packaging
+
+For packaging, configure the prefix and stage into `DESTDIR`:
+```bash
+cmake -B build -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build build
+DESTDIR="$pkgdir" cmake --install build
+```
+
+The QML install directory can be overridden with `-DQML_INSTALL_DIR=...`.
 
 
 ## Usage
@@ -590,9 +612,13 @@ and have no corresponding signal.
 ## Troubleshooting
 
 - `module "Niri" is not installed`:
-  Ensure `QML_IMPORT_PATH` includes the directory containing the `Niri` directory (not the `Niri` directory itself), or that you copied to plugin to an existing QML import path (e.g. `/usr/lib64/qt6/qml/`).
+  This means the QML engine can't find the plugin. Check the following:
 
-  Also, confirm that you're using Qt 6, and not older versions. You can do this with `qml --version`. If the Qt 6 binary is not on your `$PATH` (e.g. on Void Linux it is at `/usr/lib/qt6/bin/qml`), you can symlink it as `qml6` somewhere on your `$PATH`.
+  - If you installed system-wide, confirm the files landed in your Qt QML import path (e.g. `/usr/lib64/qt6/qml/Niri/`). If `just install` used the wrong prefix, reinstall with the correct one (see [Installation](#installation)).
+
+  - If you're running from the build directory instead, ensure `QML_IMPORT_PATH` points to the directory *containing* the `Niri` directory (i.e. `build`), not the `Niri` directory itself.
+
+  - Confirm you're using Qt 6, not an older version, with `qml --version`. If the Qt 6 binary isn't on your `$PATH` (e.g. on Void Linux it's at `/usr/lib/qt6/bin/qml`), symlink it as `qml6` somewhere on your `$PATH`.
 
 - *Connection failed*:
   Ensure niri is actually running. 😄

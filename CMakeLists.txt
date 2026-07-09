@@ -9,6 +9,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml"
+    CACHE PATH "QML module install directory")
+
 qt_add_library(Niri SHARED)
 
 set_target_properties(Niri PROPERTIES
@@ -37,3 +41,13 @@ target_link_libraries(Niri PRIVATE
 )
 
 target_compile_definitions(Niri PRIVATE QT_USE_QSTRINGBUILDER)
+
+install(TARGETS Niri Niriplugin
+    LIBRARY DESTINATION "${QML_INSTALL_DIR}/Niri"
+)
+
+install(FILES
+    "${CMAKE_BINARY_DIR}/Niri/qmldir"
+    "${CMAKE_BINARY_DIR}/Niri/Niri.qmltypes"
+    DESTINATION "${QML_INSTALL_DIR}/Niri"
+)
