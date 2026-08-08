@@ -9,6 +9,7 @@ Niri::Niri(QObject *parent)
     , m_ipcClient(new IPCClient(this))
     , m_workspaceModel(new WorkspaceModel(this))
     , m_windowModel(new WindowModel(this))
+    , m_keyboardLayouts(new KeyboardLayouts(this))
 {
     // Wire up IPC client signals
     QObject::connect(m_ipcClient, &IPCClient::connected,
@@ -31,6 +32,10 @@ Niri::Niri(QObject *parent)
     // Forward focused window changes
     QObject::connect(m_windowModel, &WindowModel::focusedWindowChanged,
                      this, &Niri::focusedWindowChanged);
+
+    // Wire events to keyboard layouts
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived,
+                     m_keyboardLayouts, &KeyboardLayouts::handleEvent);
 }
 
 Niri::~Niri()
@@ -156,4 +161,28 @@ QVariantMap Niri::sendAction(const QJsonObject &action)
 QVariantMap Niri::sendRawAction(const QVariantMap &action)
 {
     return sendAction(QJsonObject::fromVariantMap(action));
+}
+
+QVariantMap Niri::switchKeyboardLayoutNext()
+{
+    QJsonObject action;
+    action["SwitchLayout"] = QJsonObject{{"layout", QStringLiteral("Next")}};
+
+    return sendAction(action);
+}
+
+QVariantMap Niri::switchKeyboardLayoutPrev()
+{
+    QJsonObject action;
+    action["SwitchLayout"] = QJsonObject{{"layout", QStringLiteral("Prev")}};
+
+    return sendAction(action);
+}
+
+QVariantMap Niri::switchKeyboardLayoutByIndex(int index)
+{
+    QJsonObject action;
+    action["SwitchLayout"] = QJsonObject{{"layout", QJsonObject{{"Index", index}}}};
+
+    return sendAction(action);
 }

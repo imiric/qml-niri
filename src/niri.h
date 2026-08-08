@@ -6,6 +6,7 @@
 #include "ipcclient.h"
 #include "workspacemodel.h"
 #include "windowmodel.h"
+#include "keyboardlayouts.h"
 
 class Niri : public QObject
 {
@@ -14,6 +15,7 @@ class Niri : public QObject
     Q_PROPERTY(WorkspaceModel* workspaces READ workspaces CONSTANT)
     Q_PROPERTY(WindowModel* windows READ windows CONSTANT)
     Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+    Q_PROPERTY(KeyboardLayouts* keyboardLayouts READ keyboardLayouts CONSTANT)
 
 public:
     explicit Niri(QObject *parent = nullptr);
@@ -22,6 +24,7 @@ public:
     WorkspaceModel* workspaces() const { return m_workspaceModel; }
     WindowModel* windows() const { return m_windowModel; }
     Window* focusedWindow() const;
+    KeyboardLayouts* keyboardLayouts() const { return m_keyboardLayouts; }
 
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;
@@ -48,6 +51,11 @@ public:
 
     Q_INVOKABLE QVariantMap toggleOverview();
 
+    // Keyboard layout switching methods.
+    Q_INVOKABLE QVariantMap switchKeyboardLayoutPrev();
+    Q_INVOKABLE QVariantMap switchKeyboardLayoutNext();
+    Q_INVOKABLE QVariantMap switchKeyboardLayoutByIndex(int index);
+
     // Escape hatch: send an arbitrary niri Action as a JSON-shaped map.
     // The map must match niri's IPC Action schema. Prefer the typed
     // wrappers above when available. See the note on the return shape
@@ -72,4 +80,5 @@ private:
     IPCClient *m_ipcClient = nullptr;
     WorkspaceModel *m_workspaceModel = nullptr;
     WindowModel *m_windowModel = nullptr;
+    KeyboardLayouts *m_keyboardLayouts = nullptr;
 };

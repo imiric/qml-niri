@@ -10,6 +10,7 @@ A QML plugin for interacting with the [niri](https://github.com/niri-wm/niri) Wa
 - Application icon lookup via XDG desktop entries
 - Event-driven updates for all compositor changes
 - Native QML integration with Qt 6
+- Tracking keyboard layout
 
 
 ## Requirements
@@ -484,6 +485,7 @@ The main object. Connect to niri and issue actions through it.
 - `workspaces`: [WorkspaceModel](#workspacemodel) - List of all workspaces
 - `windows`: [WindowModel](#windowmodel) - List of all windows
 - `focusedWindow`: [Window](#window) - Currently focused window (`null` if none)
+- `keyboardLayouts`: [keyboardLayouts](#keyboardLayouts) - Configured keyboard layouts and the active one
 
 *Methods:*
 - `connect()`: bool - Connect to the niri IPC socket. Returns `true` on success.
@@ -496,6 +498,10 @@ The main object. Connect to niri and issue actions through it.
 - `closeWindowOrFocused(id = 0)`: object - Close the given window, or the focused window if `id` is `0` (the default)
 - `toggleOverview()`: object - Show or hide the workspace overview
 - `sendRawAction(action)`: object - Send an arbitrary niri Action
+- `switchKeyboardLayoutPrev()`: object - Switching to the next configured keyboard layout
+- `switchKeyboardLayoutPrev()`: object - Switching to the previous configured keyboard layout
+- `switchKeyboardLayoutByIndex(index)`: object - Switching to a specific keyboard layout
+
 
 All action methods (everything except `connect()` and `isConnected()`) return a result object of the form `{ ok: bool, error?: string }`. See [Action results and error handling](#action-results-and-error-handling).
 
@@ -608,6 +614,18 @@ An individual window object, owned by `WindowModel`. Not instantiable from QML; 
 Properties marked *(constant)* never change for the lifetime of the window object
 and have no corresponding signal.
 
+### KeyboardLayouts
+
+Tracks at current compositor's state of keyboard layout and which one is active. Owned by [Niri](#Niri); not instantiable from QML, use via `niri.keyboardLayouts`.
+
+*Properties:*
+- `names`: list\<string\> - Name of all configured layouts. Example: `ru`, `en`, etc.
+- `currentIndex`: int - Index of active layout.
+- `currentName`: string - Name of active layout, example: `en`
+
+*Signals:*
+- `namesChanged()` - Emitted when the list of configured layouts changed
+- `currentIndexChanged()` - Emitted when the active layout changes (also when `names` changes, since `currentName` depends on both)
 
 ## Troubleshooting
 
@@ -623,7 +641,6 @@ and have no corresponding signal.
 - *Connection failed*:
   Ensure niri is actually running. 😄
   Otherwise, verify that the `NIRI_SOCKET` environment variable is set and points to a valid socket. It should be something like `/run/user/<name>/niri.wayland-1.1856.sock`. Note that this is affected by the value of `XDG_RUNTIME_DIR`.
-
 
 ## License
 
