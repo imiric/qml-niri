@@ -91,6 +91,12 @@ ApplicationWindow {
         text: "Total workspaces: " + niri.workspaces.count
         font.pixelSize: 12
       }
+
+      Text {
+        text: "Overview: " + (niri.overview.isOpen ? "Open" : "Closed")
+        font.pixelSize: 12
+        color: niri.overview.isOpen ? "#FF9800" : "#666"
+      }
     }
 
     Rectangle {
@@ -113,6 +119,14 @@ ApplicationWindow {
         placeholderText: "e.g. eDP-1"
         Layout.fillWidth: true
         onTextChanged: outputName = text
+      }
+
+      Button {
+        text: "Toggle Overview"
+        onClicked: {
+          const r = niri.toggleOverview();
+          lastActionResult = r.ok ? "" : r.error;
+        }
       }
     }
 
