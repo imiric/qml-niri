@@ -5,42 +5,36 @@
 #include "logging.h"
 
 Niri::Niri(QObject *parent)
-    : QObject(parent)
-    , m_ipcClient(new IPCClient(this))
-    , m_workspaceModel(new WorkspaceModel(this))
-    , m_windowModel(new WindowModel(this))
-    , m_keyboardLayouts(new KeyboardLayouts(this))
+    : QObject(parent),
+      m_ipcClient(new IPCClient(this)),
+      m_workspaceModel(new WorkspaceModel(this)),
+      m_windowModel(new WindowModel(this)),
+      m_keyboardLayouts(new KeyboardLayouts(this))
 {
     // Wire up IPC client signals
-    QObject::connect(m_ipcClient, &IPCClient::connected,
-                     this, &Niri::connected);
-    QObject::connect(m_ipcClient, &IPCClient::disconnected,
-                     this, &Niri::disconnected);
-    QObject::connect(m_ipcClient, &IPCClient::errorOccurred,
-                     this, &Niri::errorOccurred);
-    QObject::connect(m_ipcClient, &IPCClient::eventReceived,
-                     this, &Niri::rawEventReceived);
+    QObject::connect(m_ipcClient, &IPCClient::connected, this, &Niri::connected);
+    QObject::connect(m_ipcClient, &IPCClient::disconnected, this, &Niri::disconnected);
+    QObject::connect(m_ipcClient, &IPCClient::errorOccurred, this, &Niri::errorOccurred);
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, this, &Niri::rawEventReceived);
 
     // Wire events to workspace model
-    QObject::connect(m_ipcClient, &IPCClient::eventReceived,
-                     m_workspaceModel, &WorkspaceModel::handleEvent);
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_workspaceModel,
+                     &WorkspaceModel::handleEvent);
 
     // Wire events to window model
-    QObject::connect(m_ipcClient, &IPCClient::eventReceived,
-                     m_windowModel, &WindowModel::handleEvent);
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_windowModel,
+                     &WindowModel::handleEvent);
 
     // Forward focused window changes
-    QObject::connect(m_windowModel, &WindowModel::focusedWindowChanged,
-                     this, &Niri::focusedWindowChanged);
+    QObject::connect(m_windowModel, &WindowModel::focusedWindowChanged, this,
+                     &Niri::focusedWindowChanged);
 
     // Wire events to keyboard layouts
-    QObject::connect(m_ipcClient, &IPCClient::eventReceived,
-                     m_keyboardLayouts, &KeyboardLayouts::handleEvent);
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_keyboardLayouts,
+                     &KeyboardLayouts::handleEvent);
 }
 
-Niri::~Niri()
-{
-}
+Niri::~Niri() { }
 
 bool Niri::connect()
 {
@@ -59,12 +53,12 @@ bool Niri::isConnected() const
 
 QVariantMap Niri::okResult()
 {
-    return QVariantMap{{"ok", true}};
+    return QVariantMap{ { "ok", true } };
 }
 
 QVariantMap Niri::errResult(const QString &error)
 {
-    return QVariantMap{{"ok", false}, {"error", error}};
+    return QVariantMap{ { "ok", false }, { "error", error } };
 }
 
 QVariantMap Niri::focusWorkspace(int index)
@@ -73,7 +67,7 @@ QVariantMap Niri::focusWorkspace(int index)
     reference["Index"] = index;
 
     QJsonObject action;
-    action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
+    action["FocusWorkspace"] = QJsonObject{ { "reference", reference } };
 
     return sendAction(action);
 }
@@ -84,7 +78,7 @@ QVariantMap Niri::focusWorkspaceById(quint64 id)
     reference["Id"] = QJsonValue::fromVariant(id);
 
     QJsonObject action;
-    action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
+    action["FocusWorkspace"] = QJsonObject{ { "reference", reference } };
 
     return sendAction(action);
 }
@@ -95,7 +89,7 @@ QVariantMap Niri::focusWorkspaceByName(const QString &name)
     reference["Name"] = name;
 
     QJsonObject action;
-    action["FocusWorkspace"] = QJsonObject{{"reference", reference}};
+    action["FocusWorkspace"] = QJsonObject{ { "reference", reference } };
 
     return sendAction(action);
 }
@@ -103,12 +97,12 @@ QVariantMap Niri::focusWorkspaceByName(const QString &name)
 QVariantMap Niri::focusWindow(quint64 id)
 {
     QJsonObject action;
-    action["FocusWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
+    action["FocusWindow"] = QJsonObject{ { "id", QJsonValue::fromVariant(id) } };
 
     return sendAction(action);
 }
 
-Window* Niri::focusedWindow() const
+Window *Niri::focusedWindow() const
 {
     return m_windowModel->focusedWindow();
 }
@@ -116,7 +110,7 @@ Window* Niri::focusedWindow() const
 QVariantMap Niri::closeWindow(quint64 id)
 {
     QJsonObject action;
-    action["CloseWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
+    action["CloseWindow"] = QJsonObject{ { "id", QJsonValue::fromVariant(id) } };
 
     return sendAction(action);
 }
@@ -125,9 +119,9 @@ QVariantMap Niri::closeWindowOrFocused(quint64 id)
 {
     QJsonObject action;
     if (id == 0) {
-        action["CloseWindow"] = QJsonObject{{"id", QJsonValue()}};
+        action["CloseWindow"] = QJsonObject{ { "id", QJsonValue() } };
     } else {
-        action["CloseWindow"] = QJsonObject{{"id", QJsonValue::fromVariant(id)}};
+        action["CloseWindow"] = QJsonObject{ { "id", QJsonValue::fromVariant(id) } };
     }
 
     return sendAction(action);
@@ -136,7 +130,7 @@ QVariantMap Niri::closeWindowOrFocused(quint64 id)
 QVariantMap Niri::toggleOverview()
 {
     QJsonObject action;
-    action["ToggleOverview"] = QJsonObject{};
+    action["ToggleOverview"] = QJsonObject{ };
 
     return sendAction(action);
 }
@@ -166,7 +160,7 @@ QVariantMap Niri::sendRawAction(const QVariantMap &action)
 QVariantMap Niri::switchKeyboardLayoutNext()
 {
     QJsonObject action;
-    action["SwitchLayout"] = QJsonObject{{"layout", QStringLiteral("Next")}};
+    action["SwitchLayout"] = QJsonObject{ { "layout", QStringLiteral("Next") } };
 
     return sendAction(action);
 }
@@ -174,7 +168,7 @@ QVariantMap Niri::switchKeyboardLayoutNext()
 QVariantMap Niri::switchKeyboardLayoutPrev()
 {
     QJsonObject action;
-    action["SwitchLayout"] = QJsonObject{{"layout", QStringLiteral("Prev")}};
+    action["SwitchLayout"] = QJsonObject{ { "layout", QStringLiteral("Prev") } };
 
     return sendAction(action);
 }
@@ -182,7 +176,7 @@ QVariantMap Niri::switchKeyboardLayoutPrev()
 QVariantMap Niri::switchKeyboardLayoutByIndex(int index)
 {
     QJsonObject action;
-    action["SwitchLayout"] = QJsonObject{{"layout", QJsonObject{{"Index", index}}}};
+    action["SwitchLayout"] = QJsonObject{ { "layout", QJsonObject{ { "Index", index } } } };
 
     return sendAction(action);
 }

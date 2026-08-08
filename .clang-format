@@ -1,0 +1,141 @@
+# Qt / C++ style: based on upstream qtbase _clang-format, modernized.
+# Requires clang-format >= 16.
+# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# and https://wiki.qt.io/Qt_Coding_Style
+
+---
+Language: Cpp
+# WebKit style was loosely based on the Qt style.
+BasedOnStyle: WebKit
+Standard: c++20
+
+IndentWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+ColumnLimit: 100
+
+# Disable reflow of some specific comments.
+# qdoc comments: indentation rules are different.
+# Translation comments and SPDX license identifiers are also excluded.
+CommentPragmas: "^!|^:|^ SPDX-License-Identifier:"
+
+# Space between the type and the star for pointer types: Type *ptr.
+PointerAlignment: Right
+ReferenceAlignment: Pointer
+DerivePointerAlignment: false
+
+# template< without space.
+SpaceAfterTemplateKeyword: false
+AlwaysBreakTemplateDeclarations: Yes
+
+# Break before the operators, but not before a '='.
+BreakBeforeBinaryOperators: NonAssignment
+
+# Braces are usually attached, but not after functions or class declarations.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  IndentBraces: false
+
+# When constructor initializers do not fit on one line, put them each on a new
+# line. Break before the colon and after the commas, indent by 4 spaces.
+PackConstructorInitializers: NextLine
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+
+# Indent width for line continuations.
+ContinuationIndentWidth: 8
+
+# No indentation for namespaces, but add "// namespace <namespace>" comments on
+# the closing brace (ignored for namespaces shorter than ShortNamespaceLines).
+NamespaceIndentation: None
+FixNamespaceComments: true
+ShortNamespaceLines: 1
+
+# Allow indentation for preprocessing directives (if/ifdef/endif),
+# but only with 2 spaces.
+IndentPPDirectives: AfterHash
+PPIndentWidth: 2
+
+# Horizontally align arguments after an open bracket.
+AlignAfterOpenBracket: Align
+
+# Align lambda bodies with the signature rather than with the surrounding block.
+LambdaBodyIndentation: Signature
+
+# Ideally we should also allow less short functions in a single line, but
+# clang-format does not handle that.
+AllowShortFunctionsOnASingleLine: Inline
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# When escaping newlines in a macro attach the '\' as far left as possible, e.g.
+##define a     \
+#   something; \
+#   other;     \
+#   thelastlineislong;
+AlignEscapedNewlines: Left
+
+# POSIX-correct files, avoids "\ No newline at end of file"
+InsertNewlineAtEOF: true
+
+# Avoids the addition of a space between an identifier and the
+# initializer list in list-initialization.
+SpaceBeforeCpp11BracedList: false
+
+# The coding style specifies some include order categories, but also tells to
+# separate categories with an empty line. It does not specify the order within
+# the categories. Since the SortInclude feature of clang-format does not
+# re-order includes separated by empty lines, the feature is not used.
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# Macros for which the opening brace stays attached.
+ForEachMacros: [foreach, Q_FOREACH, forever, Q_FOREVER, QBENCHMARK, QBENCHMARK_ONCE]
+
+# Macros that form a complete statement and must sit on their own line.
+# This list replaces clang-format's built-in defaults, hence Q_UNUSED and
+# QT_REQUIRE_VERSION are repeated here.
+StatementMacros:
+  - Q_UNUSED
+  - QT_REQUIRE_VERSION
+  - Q_OBJECT
+  - Q_GADGET
+  - Q_NAMESPACE
+  - Q_INTERFACES
+  - Q_ENUM
+  - Q_ENUM_NS
+  - Q_FLAG
+  - Q_FLAG_NS
+  - Q_PROPERTY
+  - Q_CLASSINFO
+  - Q_DECLARE_METATYPE
+  - QML_ELEMENT
+  - QML_NAMED_ELEMENT
+  - QML_ANONYMOUS
+  - QML_UNCREATABLE
+  - QML_SINGLETON
+  - QML_VALUE_TYPE
+  - QML_ADDED_IN_VERSION
+  - QML_EXTENDED
+  - QML_ATTACHED
+
+# Macros that behave like declaration attributes and must not be treated as
+# part of the return type or as a function call.
+AttributeMacros: [Q_INVOKABLE, Q_SLOT, Q_SIGNAL, Q_SCRIPTABLE, Q_REQUIRED_RESULT]
+
+---
+# Use the Google-based style for .proto files.
+Language: Proto
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 100

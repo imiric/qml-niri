@@ -12,19 +12,19 @@ class Niri : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(WorkspaceModel* workspaces READ workspaces CONSTANT)
-    Q_PROPERTY(WindowModel* windows READ windows CONSTANT)
-    Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
-    Q_PROPERTY(KeyboardLayouts* keyboardLayouts READ keyboardLayouts CONSTANT)
+    Q_PROPERTY(WorkspaceModel *workspaces READ workspaces CONSTANT)
+    Q_PROPERTY(WindowModel *windows READ windows CONSTANT)
+    Q_PROPERTY(Window *focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+    Q_PROPERTY(KeyboardLayouts *keyboardLayouts READ keyboardLayouts CONSTANT)
 
 public:
     explicit Niri(QObject *parent = nullptr);
     ~Niri();
 
-    WorkspaceModel* workspaces() const { return m_workspaceModel; }
-    WindowModel* windows() const { return m_windowModel; }
-    Window* focusedWindow() const;
-    KeyboardLayouts* keyboardLayouts() const { return m_keyboardLayouts; }
+    WorkspaceModel *workspaces() const { return m_workspaceModel; }
+    WindowModel *windows() const { return m_windowModel; }
+    Window *focusedWindow() const;
+    KeyboardLayouts *keyboardLayouts() const { return m_keyboardLayouts; }
 
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;

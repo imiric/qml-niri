@@ -5,7 +5,7 @@
 #include <QQmlEngine>
 #include <QStringList>
 
-/// Tracking Niri compositor's configured keyboad layouts and active state
+// Tracking Niri compositor's configured keyboad layouts and active state
 class KeyboardLayouts : public QObject
 {
     Q_OBJECT

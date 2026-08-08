@@ -6,16 +6,13 @@
 #include "logging.h"
 
 IPCClient::IPCClient(QObject *parent)
-    : QObject(parent)
-    , m_eventSocket(new QLocalSocket(this))
-    , m_requestSocket(new QLocalSocket(this))
+    : QObject(parent),
+      m_eventSocket(new QLocalSocket(this)),
+      m_requestSocket(new QLocalSocket(this))
 {
-    QObject::connect(m_eventSocket, &QLocalSocket::readyRead,
-                     this, &IPCClient::onReadyRead);
-    QObject::connect(m_eventSocket, &QLocalSocket::errorOccurred,
-                     this, &IPCClient::onSocketError);
-    QObject::connect(m_eventSocket, &QLocalSocket::disconnected,
-                     this, &IPCClient::disconnected);
+    QObject::connect(m_eventSocket, &QLocalSocket::readyRead, this, &IPCClient::onReadyRead);
+    QObject::connect(m_eventSocket, &QLocalSocket::errorOccurred, this, &IPCClient::onSocketError);
+    QObject::connect(m_eventSocket, &QLocalSocket::disconnected, this, &IPCClient::disconnected);
 }
 
 IPCClient::~IPCClient()
@@ -33,7 +30,8 @@ bool IPCClient::connect(QString *errorOut)
     m_socketPath = QProcessEnvironment::systemEnvironment().value("NIRI_SOCKET");
 
     if (m_socketPath.isEmpty()) {
-        if (errorOut) *errorOut = QStringLiteral("NIRI_SOCKET environment variable not set");
+        if (errorOut)
+            *errorOut = QStringLiteral("NIRI_SOCKET environment variable not set");
         return false;
     }
 
@@ -41,7 +39,9 @@ bool IPCClient::connect(QString *errorOut)
     m_eventSocket->connectToServer(m_socketPath);
 
     if (!m_eventSocket->waitForConnected(1000)) {
-        if (errorOut) *errorOut = QStringLiteral("Failed to connect event socket: ") + m_eventSocket->errorString();
+        if (errorOut)
+            *errorOut = QStringLiteral("Failed to connect event socket: ")
+                    + m_eventSocket->errorString();
         return false;
     }
 
@@ -49,7 +49,9 @@ bool IPCClient::connect(QString *errorOut)
     m_requestSocket->connectToServer(m_socketPath);
 
     if (!m_requestSocket->waitForConnected(1000)) {
-        if (errorOut) *errorOut = QStringLiteral("Failed to connect request socket: ") + m_requestSocket->errorString();
+        if (errorOut)
+            *errorOut = QStringLiteral("Failed to connect request socket: ")
+                    + m_requestSocket->errorString();
         m_eventSocket->close();
         return false;
     }
@@ -58,7 +60,8 @@ bool IPCClient::connect(QString *errorOut)
     QByteArray data = "\"EventStream\"\n";
     qint64 written = m_eventSocket->write(data);
     if (written != data.size()) {
-        if (errorOut) *errorOut = QStringLiteral("Failed to write event stream request");
+        if (errorOut)
+            *errorOut = QStringLiteral("Failed to write event stream request");
         return false;
     }
     m_eventSocket->flush();
@@ -69,15 +72,16 @@ bool IPCClient::connect(QString *errorOut)
 
 bool IPCClient::isConnected() const
 {
-    return m_eventSocket && m_eventSocket->state() == QLocalSocket::ConnectedState &&
-           m_requestSocket && m_requestSocket->state() == QLocalSocket::ConnectedState;
+    return m_eventSocket && m_eventSocket->state() == QLocalSocket::ConnectedState
+            && m_requestSocket && m_requestSocket->state() == QLocalSocket::ConnectedState;
 }
 
 bool IPCClient::sendRequest(const QJsonObject &request, QString *errorOut)
 {
     if (!m_requestSocket || m_requestSocket->state() != QLocalSocket::ConnectedState) {
         qCWarning(niriLog) << "Request socket not connected";
-        if (errorOut) *errorOut = QStringLiteral("Request socket not connected");
+        if (errorOut)
+            *errorOut = QStringLiteral("Request socket not connected");
         return false;
     }
 
@@ -88,7 +92,8 @@ bool IPCClient::sendRequest(const QJsonObject &request, QString *errorOut)
 
     qint64 written = m_requestSocket->write(data);
     if (written != data.size()) {
-        if (errorOut) *errorOut = QStringLiteral("Failed to write request");
+        if (errorOut)
+            *errorOut = QStringLiteral("Failed to write request");
         return false;
     }
 
@@ -96,7 +101,8 @@ bool IPCClient::sendRequest(const QJsonObject &request, QString *errorOut)
 
     // Wait for and read the response (blocking, but should be fast)
     if (!m_requestSocket->waitForReadyRead(1000)) {
-        if (errorOut) *errorOut = QStringLiteral("Timed out waiting for response");
+        if (errorOut)
+            *errorOut = QStringLiteral("Timed out waiting for response");
         return false;
     }
 
@@ -108,7 +114,8 @@ bool IPCClient::sendRequest(const QJsonObject &request, QString *errorOut)
 
     if (parseError.error != QJsonParseError::NoError) {
         qCWarning(niriLog) << "Failed to parse response:" << parseError.errorString();
-        if (errorOut) *errorOut = parseError.errorString();
+        if (errorOut)
+            *errorOut = parseError.errorString();
         return false;
     }
 
@@ -116,7 +123,8 @@ bool IPCClient::sendRequest(const QJsonObject &request, QString *errorOut)
     if (responseObj.contains("Err")) {
         const QString err = responseObj["Err"].toString();
         qCWarning(niriLog) << "Request error:" << err;
-        if (errorOut) *errorOut = err;
+        if (errorOut)
+            *errorOut = err;
         return false;
     }
 
@@ -147,8 +155,8 @@ void IPCClient::onReadyRead()
             // First response is the Reply to EventStream request
             if (obj.contains("Ok") || obj.contains("Err")) {
                 if (obj.contains("Err")) {
-                    emit errorOccurred(QStringLiteral("Event stream request failed: ") +
-                                      obj["Err"].toString());
+                    emit errorOccurred(QStringLiteral("Event stream request failed: ")
+                                       + obj["Err"].toString());
                 }
                 continue;
             }

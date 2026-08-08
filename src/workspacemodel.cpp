@@ -4,10 +4,7 @@
 #include "workspacemodel.h"
 #include "logging.h"
 
-WorkspaceModel::WorkspaceModel(QObject *parent)
-    : QAbstractListModel(parent)
-{
-}
+WorkspaceModel::WorkspaceModel(QObject *parent) : QAbstractListModel(parent) { }
 
 int WorkspaceModel::rowCount(const QModelIndex &parent) const
 {
@@ -110,20 +107,17 @@ void WorkspaceModel::handleEvent(const QJsonObject &event)
     if (event.contains("WorkspacesChanged")) {
         QJsonArray workspaces = event["WorkspacesChanged"].toObject()["workspaces"].toArray();
         handleWorkspacesChanged(workspaces);
-    }
-    else if (event.contains("WorkspaceActivated")) {
+    } else if (event.contains("WorkspaceActivated")) {
         QJsonObject data = event["WorkspaceActivated"].toObject();
         quint64 id = data["id"].toInteger();
         bool focused = data["focused"].toBool();
         handleWorkspaceActivated(id, focused);
-    }
-    else if (event.contains("WorkspaceUrgencyChanged")) {
+    } else if (event.contains("WorkspaceUrgencyChanged")) {
         QJsonObject data = event["WorkspaceUrgencyChanged"].toObject();
         quint64 id = data["id"].toInteger();
         bool urgent = data["urgent"].toBool();
         handleWorkspaceUrgencyChanged(id, urgent);
-    }
-    else if (event.contains("WorkspaceActiveWindowChanged")) {
+    } else if (event.contains("WorkspaceActiveWindowChanged")) {
         QJsonObject data = event["WorkspaceActiveWindowChanged"].toObject();
         quint64 workspaceId = data["workspace_id"].toInteger();
         QJsonValue activeWindowId = data["active_window_id"];
@@ -143,14 +137,13 @@ void WorkspaceModel::handleWorkspacesChanged(const QJsonArray &workspaces)
     }
 
     // Sort by index (which corresponds to workspace position on its output)
-    std::sort(m_workspaces.begin(), m_workspaces.end(),
-              [](const Workspace &a, const Workspace &b) {
-                  // First sort by output name, then by index within output
-                  if (a.output != b.output) {
-                      return a.output < b.output;
-                  }
-                  return a.index < b.index;
-              });
+    std::sort(m_workspaces.begin(), m_workspaces.end(), [](const Workspace &a, const Workspace &b) {
+        // First sort by output name, then by index within output
+        if (a.output != b.output) {
+            return a.output < b.output;
+        }
+        return a.index < b.index;
+    });
 
     endResetModel();
     emit countChanged();
@@ -175,7 +168,7 @@ void WorkspaceModel::handleWorkspaceActivated(quint64 id, bool focused)
                 // Only emit signal if row is visible
                 if (i < rowCount()) {
                     QModelIndex modelIdx = index(i);
-                    emit dataChanged(modelIdx, modelIdx, {IsActiveRole});
+                    emit dataChanged(modelIdx, modelIdx, { IsActiveRole });
                 }
             }
         }
@@ -188,7 +181,7 @@ void WorkspaceModel::handleWorkspaceActivated(quint64 id, bool focused)
                 // Only emit signal if row is visible
                 if (i < rowCount()) {
                     QModelIndex modelIdx = index(i);
-                    emit dataChanged(modelIdx, modelIdx, {IsFocusedRole});
+                    emit dataChanged(modelIdx, modelIdx, { IsFocusedRole });
                 }
             }
         }
@@ -208,12 +201,13 @@ void WorkspaceModel::handleWorkspaceUrgencyChanged(quint64 id, bool urgent)
         // Only emit signal if row is visible
         if (idx < rowCount()) {
             QModelIndex modelIdx = index(idx);
-            emit dataChanged(modelIdx, modelIdx, {IsUrgentRole});
+            emit dataChanged(modelIdx, modelIdx, { IsUrgentRole });
         }
     }
 }
 
-void WorkspaceModel::handleWorkspaceActiveWindowChanged(quint64 workspaceId, const QJsonValue &activeWindowId)
+void WorkspaceModel::handleWorkspaceActiveWindowChanged(quint64 workspaceId,
+                                                        const QJsonValue &activeWindowId)
 {
     int idx = findWorkspaceIndex(workspaceId);
     if (idx == -1) {
@@ -227,7 +221,7 @@ void WorkspaceModel::handleWorkspaceActiveWindowChanged(quint64 workspaceId, con
         // Only emit signal if row is visible
         if (idx < rowCount()) {
             QModelIndex modelIdx = index(idx);
-            emit dataChanged(modelIdx, modelIdx, {ActiveWindowIdRole});
+            emit dataChanged(modelIdx, modelIdx, { ActiveWindowIdRole });
         }
     }
 }

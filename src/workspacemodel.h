@@ -4,7 +4,8 @@
 #include <QJsonObject>
 #include <QQmlEngine>
 
-struct Workspace {
+struct Workspace
+{
     quint64 id;
     quint8 index;
     QString name;

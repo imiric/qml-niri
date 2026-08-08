@@ -11,7 +11,10 @@ clean:
   rm -rf build
 
 format:
-  qmlformat -i test/*.qml
+  git ls-files -z '*.qml' \
+    | xargs -0 -r -n 50 qmlformat -i
+  git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' \
+    | xargs -0 -r -n 50 clang-format -i
 
 test component:
   QML_IMPORT_PATH="$PWD/build" qml6 test/test_{{component}}.qml

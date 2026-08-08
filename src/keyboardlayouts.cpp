@@ -2,12 +2,9 @@
 #include "logging.h"
 #include <QJsonArray>
 
-KeyboardLayouts::KeyboardLayouts(QObject *parent)
-    : QObject(parent)
-{
-}
+KeyboardLayouts::KeyboardLayouts(QObject *parent) : QObject(parent) { }
 
-// Get name of the currently active keyboard layout. 
+// Get name of the currently active keyboard layout.
 QString KeyboardLayouts::currentName() const
 {
     if (m_currentIndex < 0 || m_currentIndex >= m_names.count())
@@ -19,9 +16,8 @@ QString KeyboardLayouts::currentName() const
 void KeyboardLayouts::handleEvent(const QJsonObject &event)
 {
     if (event.contains("KeyboardLayoutsChanged")) {
-        QJsonObject data = event["KeyboardLayoutsChanged"]
-                            .toObject()["keyboard_layouts"]
-                            .toObject();
+        QJsonObject data =
+                event["KeyboardLayoutsChanged"].toObject()["keyboard_layouts"].toObject();
         handleLayoutsChanged(data);
     } else if (event.contains("KeyboardLayoutSwitched")) {
         QJsonObject data = event["KeyboardLayoutSwitched"].toObject();
@@ -61,11 +57,9 @@ void KeyboardLayouts::handleLayoutSwitched(int idx)
     if (idx == m_currentIndex)
         return;
 
-    if (idx < 0 || idx >= m_names.count())
-    {
-        qCWarning(niriLog)
-            << "KeyboardLayoutSwitched: index out of names range, index:" << idx
-            << "(have" << m_names.count() << "layout names)";
+    if (idx < 0 || idx >= m_names.count()) {
+        qCWarning(niriLog) << "KeyboardLayoutSwitched: index out of names range, index:" << idx
+                           << "(have" << m_names.count() << "layout names)";
         return;
     }
 

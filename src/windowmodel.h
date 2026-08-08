@@ -34,14 +34,25 @@ class Window : public QObject
 
 public:
     explicit Window(QObject *parent = nullptr)
-        : QObject(parent), id(0), pid(-1), workspaceId(0),
-          isFocused(false), isFloating(false), isUrgent(false),
-          columnIndex(0), tileIndex(0),
-          tileWidth(0), tileHeight(0),
-          windowWidth(0), windowHeight(0),
+        : QObject(parent),
+          id(0),
+          pid(-1),
+          workspaceId(0),
+          isFocused(false),
+          isFloating(false),
+          isUrgent(false),
+          columnIndex(0),
+          tileIndex(0),
+          tileWidth(0),
+          tileHeight(0),
+          windowWidth(0),
+          windowHeight(0),
           tilePosX(std::numeric_limits<qreal>::quiet_NaN()),
           tilePosY(std::numeric_limits<qreal>::quiet_NaN()),
-          windowOffsetX(0), windowOffsetY(0) {}
+          windowOffsetX(0),
+          windowOffsetY(0)
+    {
+    }
 
     quint64 id;
     QString title;
@@ -77,7 +88,7 @@ class WindowModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(Window* focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
+    Q_PROPERTY(Window *focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
 
 public:
     enum WindowRoles {
@@ -109,7 +120,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    Window* focusedWindow() const;
+    Window *focusedWindow() const;
 
 public slots:
     void handleEvent(const QJsonObject &event);
@@ -129,8 +140,8 @@ private:
     QList<int> updateWindow(Window *win, const QJsonObject &obj);
     bool clearOtherFocus(quint64 focusedId);
 
-    Window* parseWindow(const QJsonObject &obj);
+    Window *parseWindow(const QJsonObject &obj);
     int findWindowIndex(quint64 id) const;
 
-    QList<Window*> m_windows;
+    QList<Window *> m_windows;
 };
