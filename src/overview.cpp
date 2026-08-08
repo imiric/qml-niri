@@ -1,7 +1,7 @@
 #include "overview.h"
 #include "logging.h"
 
-Overview::Overview(QObject *parent) : QObject(parent), isOpen(false) { }
+Overview::Overview(QObject *parent) : QObject(parent) { }
 
 void Overview::handleEvent(const QJsonObject &event)
 {
@@ -16,8 +16,8 @@ void Overview::handleOverviewOpenedOrClosed(const QJsonObject &obj)
     if (obj.contains("is_open")) {
         bool open = obj["is_open"].toBool();
 
-        if (isOpen != open) {
-            isOpen = open;
+        if (m_isOpen != open) {
+            m_isOpen = open;
             emit isOpenChanged();
         }
     }

@@ -12,67 +12,67 @@ class Window : public QObject
     QML_ELEMENT
     QML_UNCREATABLE("Window objects are owned by WindowModel")
 
-    Q_PROPERTY(quint64 id MEMBER id CONSTANT)
-    Q_PROPERTY(QString title MEMBER title NOTIFY titleChanged)
-    Q_PROPERTY(QString appId MEMBER appId CONSTANT)
-    Q_PROPERTY(qint32 pid MEMBER pid CONSTANT)
-    Q_PROPERTY(quint64 workspaceId MEMBER workspaceId NOTIFY workspaceIdChanged)
-    Q_PROPERTY(bool isFocused MEMBER isFocused NOTIFY isFocusedChanged)
-    Q_PROPERTY(bool isFloating MEMBER isFloating NOTIFY isFloatingChanged)
-    Q_PROPERTY(bool isUrgent MEMBER isUrgent NOTIFY isUrgentChanged)
-    Q_PROPERTY(qint32 columnIndex MEMBER columnIndex NOTIFY layoutChanged)
-    Q_PROPERTY(qint32 tileIndex MEMBER tileIndex NOTIFY layoutChanged)
-    Q_PROPERTY(qreal tileWidth MEMBER tileWidth NOTIFY layoutChanged)
-    Q_PROPERTY(qreal tileHeight MEMBER tileHeight NOTIFY layoutChanged)
-    Q_PROPERTY(qint32 windowWidth MEMBER windowWidth NOTIFY layoutChanged)
-    Q_PROPERTY(qint32 windowHeight MEMBER windowHeight NOTIFY layoutChanged)
-    Q_PROPERTY(qreal tilePosX MEMBER tilePosX NOTIFY layoutChanged)
-    Q_PROPERTY(qreal tilePosY MEMBER tilePosY NOTIFY layoutChanged)
-    Q_PROPERTY(qreal windowOffsetX MEMBER windowOffsetX NOTIFY layoutChanged)
-    Q_PROPERTY(qreal windowOffsetY MEMBER windowOffsetY NOTIFY layoutChanged)
-    Q_PROPERTY(QString iconPath MEMBER iconPath CONSTANT)
+    Q_PROPERTY(quint64 id READ id CONSTANT)
+    Q_PROPERTY(QString title READ title NOTIFY titleChanged)
+    Q_PROPERTY(QString appId READ appId CONSTANT)
+    Q_PROPERTY(qint32 pid READ pid CONSTANT)
+    Q_PROPERTY(quint64 workspaceId READ workspaceId NOTIFY workspaceIdChanged)
+    Q_PROPERTY(bool isFocused READ isFocused NOTIFY isFocusedChanged)
+    Q_PROPERTY(bool isFloating READ isFloating NOTIFY isFloatingChanged)
+    Q_PROPERTY(bool isUrgent READ isUrgent NOTIFY isUrgentChanged)
+    Q_PROPERTY(qint32 columnIndex READ columnIndex NOTIFY layoutChanged)
+    Q_PROPERTY(qint32 tileIndex READ tileIndex NOTIFY layoutChanged)
+    Q_PROPERTY(qreal tileWidth READ tileWidth NOTIFY layoutChanged)
+    Q_PROPERTY(qreal tileHeight READ tileHeight NOTIFY layoutChanged)
+    Q_PROPERTY(qint32 windowWidth READ windowWidth NOTIFY layoutChanged)
+    Q_PROPERTY(qint32 windowHeight READ windowHeight NOTIFY layoutChanged)
+    Q_PROPERTY(qreal tilePosX READ tilePosX NOTIFY layoutChanged)
+    Q_PROPERTY(qreal tilePosY READ tilePosY NOTIFY layoutChanged)
+    Q_PROPERTY(qreal windowOffsetX READ windowOffsetX NOTIFY layoutChanged)
+    Q_PROPERTY(qreal windowOffsetY READ windowOffsetY NOTIFY layoutChanged)
+    Q_PROPERTY(QString iconPath READ iconPath CONSTANT)
 
 public:
     explicit Window(QObject *parent = nullptr)
         : QObject(parent),
-          id(0),
-          pid(-1),
-          workspaceId(0),
-          isFocused(false),
-          isFloating(false),
-          isUrgent(false),
-          columnIndex(0),
-          tileIndex(0),
-          tileWidth(0),
-          tileHeight(0),
-          windowWidth(0),
-          windowHeight(0),
-          tilePosX(std::numeric_limits<qreal>::quiet_NaN()),
-          tilePosY(std::numeric_limits<qreal>::quiet_NaN()),
-          windowOffsetX(0),
-          windowOffsetY(0)
+          m_id(0),
+          m_pid(-1),
+          m_workspaceId(0),
+          m_isFocused(false),
+          m_isFloating(false),
+          m_isUrgent(false),
+          m_columnIndex(0),
+          m_tileIndex(0),
+          m_tileWidth(0),
+          m_tileHeight(0),
+          m_windowWidth(0),
+          m_windowHeight(0),
+          m_tilePosX(std::numeric_limits<qreal>::quiet_NaN()),
+          m_tilePosY(std::numeric_limits<qreal>::quiet_NaN()),
+          m_windowOffsetX(0),
+          m_windowOffsetY(0)
     {
     }
 
-    quint64 id;
-    QString title;
-    QString appId;
-    qint32 pid;
-    quint64 workspaceId;
-    bool isFocused;
-    bool isFloating;
-    bool isUrgent;
-    qint32 columnIndex;
-    qint32 tileIndex;
-    qreal tileWidth;
-    qreal tileHeight;
-    qint32 windowWidth;
-    qint32 windowHeight;
-    qreal tilePosX;
-    qreal tilePosY;
-    qreal windowOffsetX;
-    qreal windowOffsetY;
-    QString iconPath;
+    quint64 id() const { return m_id; }
+    QString title() const { return m_title; }
+    QString appId() const { return m_appId; }
+    qint32 pid() const { return m_pid; }
+    quint64 workspaceId() const { return m_workspaceId; }
+    bool isFocused() const { return m_isFocused; }
+    bool isFloating() const { return m_isFloating; }
+    bool isUrgent() const { return m_isUrgent; }
+    qint32 columnIndex() const { return m_columnIndex; }
+    qint32 tileIndex() const { return m_tileIndex; }
+    qreal tileWidth() const { return m_tileWidth; }
+    qreal tileHeight() const { return m_tileHeight; }
+    qint32 windowWidth() const { return m_windowWidth; }
+    qint32 windowHeight() const { return m_windowHeight; }
+    qreal tilePosX() const { return m_tilePosX; }
+    qreal tilePosY() const { return m_tilePosY; }
+    qreal windowOffsetX() const { return m_windowOffsetX; }
+    qreal windowOffsetY() const { return m_windowOffsetY; }
+    QString iconPath() const { return m_iconPath; }
 
 signals:
     void titleChanged();
@@ -81,6 +81,29 @@ signals:
     void isFloatingChanged();
     void isUrgentChanged();
     void layoutChanged();
+
+private:
+    friend class WindowModel;
+
+    quint64 m_id;
+    QString m_title;
+    QString m_appId;
+    qint32 m_pid;
+    quint64 m_workspaceId;
+    bool m_isFocused;
+    bool m_isFloating;
+    bool m_isUrgent;
+    qint32 m_columnIndex;
+    qint32 m_tileIndex;
+    qreal m_tileWidth;
+    qreal m_tileHeight;
+    qint32 m_windowWidth;
+    qint32 m_windowHeight;
+    qreal m_tilePosX;
+    qreal m_tilePosY;
+    qreal m_windowOffsetX;
+    qreal m_windowOffsetY;
+    QString m_iconPath;
 };
 
 class WindowModel : public QAbstractListModel

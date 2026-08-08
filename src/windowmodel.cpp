@@ -36,43 +36,43 @@ QVariant WindowModel::data(const QModelIndex &index, int role) const
 
     switch (role) {
     case IdRole:
-        return QVariant::fromValue(win->id);
+        return QVariant::fromValue(win->id());
     case TitleRole:
-        return win->title;
+        return win->title();
     case AppIdRole:
-        return win->appId;
+        return win->appId();
     case PidRole:
-        return win->pid;
+        return win->pid();
     case WorkspaceIdRole:
-        return QVariant::fromValue(win->workspaceId);
+        return QVariant::fromValue(win->workspaceId());
     case IsFocusedRole:
-        return win->isFocused;
+        return win->isFocused();
     case IsFloatingRole:
-        return win->isFloating;
+        return win->isFloating();
     case IsUrgentRole:
-        return win->isUrgent;
+        return win->isUrgent();
     case ColumnIndexRole:
-        return win->columnIndex;
+        return win->columnIndex();
     case TileIndexRole:
-        return win->tileIndex;
+        return win->tileIndex();
     case TileWidthRole:
-        return win->tileWidth;
+        return win->tileWidth();
     case TileHeightRole:
-        return win->tileHeight;
+        return win->tileHeight();
     case WindowWidthRole:
-        return win->windowWidth;
+        return win->windowWidth();
     case WindowHeightRole:
-        return win->windowHeight;
+        return win->windowHeight();
     case TilePosXRole:
-        return win->tilePosX;
+        return win->tilePosX();
     case TilePosYRole:
-        return win->tilePosY;
+        return win->tilePosY();
     case WindowOffsetXRole:
-        return win->windowOffsetX;
+        return win->windowOffsetX();
     case WindowOffsetYRole:
-        return win->windowOffsetY;
+        return win->windowOffsetY();
     case IconPathRole:
-        return win->iconPath;
+        return win->iconPath();
     default:
         return QVariant();
     }
@@ -106,7 +106,7 @@ QHash<int, QByteArray> WindowModel::roleNames() const
 Window *WindowModel::focusedWindow() const
 {
     for (Window *win : m_windows) {
-        if (win->isFocused)
+        if (win->isFocused())
             return win;
     }
     return nullptr;
@@ -151,7 +151,7 @@ void WindowModel::handleWindowsChanged(const QJsonArray &windows)
 
     // Sort by window ID for consistent ordering
     std::sort(m_windows.begin(), m_windows.end(),
-              [](const Window *a, const Window *b) { return a->id < b->id; });
+              [](const Window *a, const Window *b) { return a->id() < b->id(); });
 
     endResetModel();
     emit countChanged();
@@ -169,14 +169,14 @@ void WindowModel::handleWindowOpenedOrChanged(const QJsonObject &windowObj)
     if (idx == -1) {
         // New window: insert at the position that keeps m_windows sorted by id.
         window = parseWindow(windowObj);
-        const auto it = std::lower_bound(m_windows.begin(), m_windows.end(), window->id,
-                                         [](const Window *w, quint64 id) { return w->id < id; });
+        const auto it = std::lower_bound(m_windows.begin(), m_windows.end(), window->id(),
+                                         [](const Window *w, quint64 id) { return w->id() < id; });
         const int insertAt = static_cast<int>(it - m_windows.begin());
         beginInsertRows(QModelIndex(), insertAt, insertAt);
         m_windows.insert(it, window);
         endInsertRows();
         emit countChanged();
-        focusMayHaveChanged = window->isFocused;
+        focusMayHaveChanged = window->m_isFocused;
     } else {
         // Existing window: mutate in place so held QML handles stay valid.
         window = m_windows[idx];
@@ -193,8 +193,8 @@ void WindowModel::handleWindowOpenedOrChanged(const QJsonObject &windowObj)
     // Clearing a stale focus elsewhere changes focusedWindow() even if this
     // window's own focus role was unchanged, so track that too.
     bool clearedOtherFocus = false;
-    if (window->isFocused) {
-        clearedOtherFocus = clearOtherFocus(window->id);
+    if (window->m_isFocused) {
+        clearedOtherFocus = clearOtherFocus(window->id());
     }
 
     if (focusMayHaveChanged || clearedOtherFocus) {
@@ -210,7 +210,7 @@ void WindowModel::handleWindowClosed(quint64 id)
         return;
     }
 
-    bool wasFocused = m_windows[idx]->isFocused;
+    bool wasFocused = m_windows[idx]->m_isFocused;
 
     beginRemoveRows(QModelIndex(), idx, idx);
     delete m_windows.takeAt(idx);
@@ -228,9 +228,9 @@ void WindowModel::handleWindowFocusChanged(const QJsonValue &idValue)
     quint64 newFocusedId = idValue.isNull() ? 0 : idValue.toInteger();
 
     for (int i = 0; i < m_windows.count(); ++i) {
-        bool shouldBeFocused = (m_windows[i]->id == newFocusedId);
-        if (m_windows[i]->isFocused != shouldBeFocused) {
-            m_windows[i]->isFocused = shouldBeFocused;
+        bool shouldBeFocused = (m_windows[i]->m_id == newFocusedId);
+        if (m_windows[i]->m_isFocused != shouldBeFocused) {
+            m_windows[i]->m_isFocused = shouldBeFocused;
             QModelIndex modelIdx = index(i);
             emit dataChanged(modelIdx, modelIdx, { IsFocusedRole });
         }
@@ -247,8 +247,8 @@ void WindowModel::handleWindowUrgencyChanged(quint64 id, bool urgent)
         return;
     }
 
-    if (m_windows[idx]->isUrgent != urgent) {
-        m_windows[idx]->isUrgent = urgent;
+    if (m_windows[idx]->m_isUrgent != urgent) {
+        m_windows[idx]->m_isUrgent = urgent;
         QModelIndex modelIdx = index(idx);
         emit dataChanged(modelIdx, modelIdx, { IsUrgentRole });
     }
@@ -277,21 +277,21 @@ void WindowModel::handleWindowLayoutsChanged(const QJsonArray &changes)
 Window *WindowModel::parseWindow(const QJsonObject &obj)
 {
     Window *win = new Window(this);
-    win->id = obj["id"].toInteger();
-    win->title = obj["title"].toString();
-    win->appId = obj["app_id"].toString();
+    win->m_id = obj["id"].toInteger();
+    win->m_title = obj["title"].toString();
+    win->m_appId = obj["app_id"].toString();
 
     QJsonValue pidValue = obj["pid"];
-    win->pid = pidValue.isNull() ? -1 : pidValue.toInt();
+    win->m_pid = pidValue.isNull() ? -1 : pidValue.toInt();
 
     QJsonValue workspaceIdValue = obj["workspace_id"];
-    win->workspaceId = workspaceIdValue.isNull() ? 0 : workspaceIdValue.toInteger();
+    win->m_workspaceId = workspaceIdValue.isNull() ? 0 : workspaceIdValue.toInteger();
 
-    win->isFocused = obj["is_focused"].toBool();
-    win->isFloating = obj["is_floating"].toBool();
-    win->isUrgent = obj["is_urgent"].toBool();
+    win->m_isFocused = obj["is_focused"].toBool();
+    win->m_isFloating = obj["is_floating"].toBool();
+    win->m_isUrgent = obj["is_urgent"].toBool();
     parseWindowLayout(win, obj["layout"].toObject());
-    win->iconPath = IconLookup::lookup(win->appId);
+    win->m_iconPath = IconLookup::lookup(win->m_appId);
 
     return win;
 }
@@ -299,31 +299,31 @@ Window *WindowModel::parseWindow(const QJsonObject &obj)
 void WindowModel::parseWindowLayout(Window *window, const QJsonObject &layoutObj)
 {
     const QJsonArray scrollingPos = layoutObj.value("pos_in_scrolling_layout").toArray();
-    window->columnIndex = scrollingPos.at(0).toInt();
-    window->tileIndex = scrollingPos.at(1).toInt();
+    window->m_columnIndex = scrollingPos.at(0).toInt();
+    window->m_tileIndex = scrollingPos.at(1).toInt();
 
     const QJsonArray tileSize = layoutObj.value("tile_size").toArray();
-    window->tileWidth = tileSize.at(0).toDouble();
-    window->tileHeight = tileSize.at(1).toDouble();
+    window->m_tileWidth = tileSize.at(0).toDouble();
+    window->m_tileHeight = tileSize.at(1).toDouble();
 
     const QJsonArray windowSize = layoutObj.value("window_size").toArray();
-    window->windowWidth = windowSize.at(0).toInt();
-    window->windowHeight = windowSize.at(1).toInt();
+    window->m_windowWidth = windowSize.at(0).toInt();
+    window->m_windowHeight = windowSize.at(1).toInt();
 
     const qreal noTilePos = std::numeric_limits<qreal>::quiet_NaN();
     const QJsonArray tilePos = layoutObj.value("tile_pos_in_workspace_view").toArray();
-    window->tilePosX = tilePos.at(0).toDouble(noTilePos);
-    window->tilePosY = tilePos.at(1).toDouble(noTilePos);
+    window->m_tilePosX = tilePos.at(0).toDouble(noTilePos);
+    window->m_tilePosY = tilePos.at(1).toDouble(noTilePos);
 
     const QJsonArray windowOffset = layoutObj.value("window_offset_in_tile").toArray();
-    window->windowOffsetX = windowOffset.at(0).toDouble();
-    window->windowOffsetY = windowOffset.at(1).toDouble();
+    window->m_windowOffsetX = windowOffset.at(0).toDouble();
+    window->m_windowOffsetY = windowOffset.at(1).toDouble();
 }
 
 int WindowModel::findWindowIndex(quint64 id) const
 {
     for (int i = 0; i < m_windows.count(); ++i) {
-        if (m_windows[i]->id == id)
+        if (m_windows[i]->m_id == id)
             return i;
     }
     return -1;
@@ -337,37 +337,37 @@ QList<int> WindowModel::updateWindow(Window *win, const QJsonObject &obj)
     QList<int> changedRoles;
 
     const QString title = obj["title"].toString();
-    if (win->title != title) {
-        win->title = title;
+    if (win->m_title != title) {
+        win->m_title = title;
         emit win->titleChanged();
         changedRoles.append(TitleRole);
     }
 
     const QJsonValue wsValue = obj["workspace_id"];
     const quint64 workspaceId = wsValue.isNull() ? 0 : wsValue.toInteger();
-    if (win->workspaceId != workspaceId) {
-        win->workspaceId = workspaceId;
+    if (win->m_workspaceId != workspaceId) {
+        win->m_workspaceId = workspaceId;
         emit win->workspaceIdChanged();
         changedRoles.append(WorkspaceIdRole);
     }
 
     const bool isFocused = obj["is_focused"].toBool();
-    if (win->isFocused != isFocused) {
-        win->isFocused = isFocused;
+    if (win->m_isFocused != isFocused) {
+        win->m_isFocused = isFocused;
         emit win->isFocusedChanged();
         changedRoles.append(IsFocusedRole);
     }
 
     const bool isFloating = obj["is_floating"].toBool();
-    if (win->isFloating != isFloating) {
-        win->isFloating = isFloating;
+    if (win->m_isFloating != isFloating) {
+        win->m_isFloating = isFloating;
         emit win->isFloatingChanged();
         changedRoles.append(IsFloatingRole);
     }
 
     const bool isUrgent = obj["is_urgent"].toBool();
-    if (win->isUrgent != isUrgent) {
-        win->isUrgent = isUrgent;
+    if (win->m_isUrgent != isUrgent) {
+        win->m_isUrgent = isUrgent;
         emit win->isUrgentChanged();
         changedRoles.append(IsUrgentRole);
     }
@@ -375,9 +375,9 @@ QList<int> WindowModel::updateWindow(Window *win, const QJsonObject &obj)
     // Layout: reuse the existing parser, then detect change as a group.
     // Snapshot the fields we treat as "layout" to decide whether to notify.
     const auto layoutSnapshot = [](const Window *w) {
-        return std::make_tuple(w->columnIndex, w->tileIndex, w->tileWidth, w->tileHeight,
-                               w->windowWidth, w->windowHeight, w->tilePosX, w->tilePosY,
-                               w->windowOffsetX, w->windowOffsetY);
+        return std::make_tuple(w->m_columnIndex, w->m_tileIndex, w->m_tileWidth, w->m_tileHeight,
+                               w->m_windowWidth, w->m_windowHeight, w->m_tilePosX, w->m_tilePosY,
+                               w->m_windowOffsetX, w->m_windowOffsetY);
     };
     const auto before = layoutSnapshot(win);
     parseWindowLayout(win, obj["layout"].toObject());
@@ -399,8 +399,8 @@ bool WindowModel::clearOtherFocus(quint64 focusedId)
 {
     bool cleared = false;
     for (int i = 0; i < m_windows.count(); ++i) {
-        if (m_windows[i]->id != focusedId && m_windows[i]->isFocused) {
-            m_windows[i]->isFocused = false;
+        if (m_windows[i]->m_id != focusedId && m_windows[i]->m_isFocused) {
+            m_windows[i]->m_isFocused = false;
             emit m_windows[i]->isFocusedChanged();
             const QModelIndex modelIdx = index(i);
             emit dataChanged(modelIdx, modelIdx, { IsFocusedRole });
