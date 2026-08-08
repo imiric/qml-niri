@@ -9,7 +9,8 @@ Niri::Niri(QObject *parent)
       m_ipcClient(new IPCClient(this)),
       m_workspaceModel(new WorkspaceModel(this)),
       m_windowModel(new WindowModel(this)),
-      m_keyboardLayouts(new KeyboardLayouts(this))
+      m_keyboardLayouts(new KeyboardLayouts(this)),
+      m_overview(new Overview(this))
 {
     // Wire up IPC client signals
     QObject::connect(m_ipcClient, &IPCClient::connected, this, &Niri::connected);
@@ -28,10 +29,12 @@ Niri::Niri(QObject *parent)
     // Forward focused window changes
     QObject::connect(m_windowModel, &WindowModel::focusedWindowChanged, this,
                      &Niri::focusedWindowChanged);
-
     // Wire events to keyboard layouts
     QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_keyboardLayouts,
                      &KeyboardLayouts::handleEvent);
+
+    // Wire overview changes
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_overview, &Overview::handleEvent);
 }
 
 Niri::~Niri() { }
