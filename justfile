@@ -10,5 +10,8 @@ install prefix="/usr":
 clean:
   rm -rf build
 
+format:
+  qmlformat -i test/*.qml
+
 test component:
   QML_IMPORT_PATH="$PWD/build" qml6 test/test_{{component}}.qml

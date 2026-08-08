@@ -7,10 +7,10 @@ A QML plugin for interacting with the [niri](https://github.com/niri-wm/niri) Wa
 
 - Real-time window and workspace monitoring and switching
 - Tracking of focus, urgency, layout changes, etc.
+- Keyboard layout tracking and switching
 - Application icon lookup via XDG desktop entries
 - Event-driven updates for all compositor changes
 - Native QML integration with Qt 6
-- Tracking keyboard layout
 
 
 ## Requirements
@@ -641,6 +641,7 @@ Tracks at current compositor's state of keyboard layout and which one is active.
 - *Connection failed*:
   Ensure niri is actually running. 😄
   Otherwise, verify that the `NIRI_SOCKET` environment variable is set and points to a valid socket. It should be something like `/run/user/<name>/niri.wayland-1.1856.sock`. Note that this is affected by the value of `XDG_RUNTIME_DIR`.
+
 
 ## License
 

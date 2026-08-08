@@ -1,18 +1,18 @@
-import QtQuick
 import Niri
+import QtQuick
 
 Niri {
-    Component.onCompleted: connect()
+  Component.onCompleted: connect()
 
-    onConnected: console.log("✓ Connected to niri")
+  onConnected: console.log("✓ Connected to niri")
 
-    onDisconnected: console.log("✗ Disconnected from niri")
+  onDisconnected: console.log("✗ Disconnected from niri")
 
-    onErrorOccurred: function(error) {
-        console.log("✗ Error:", error)
-    }
+  onErrorOccurred: function (error) {
+    console.log("✗ Error:", error);
+  }
 
-    onRawEventReceived: function(event) {
-        console.log("✓ Event received:", JSON.stringify(event, null, 2))
-    }
+  onRawEventReceived: function (event) {
+    console.log("✓ Event received:", JSON.stringify(event, null, 2));
+  }
 }

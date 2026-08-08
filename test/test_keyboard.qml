@@ -1,5 +1,5 @@
-import QtQuick
 import Niri
+import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -8,17 +8,17 @@ ApplicationWindow {
   title: "Niri xkb test"
 
   property var lastActionResult: null
-  
+
   Niri {
     id: niri
-    Component.onCompleted: connect();
+    Component.onCompleted: connect()
 
     onConnected: {
       status.text = "Connected";
       status.color = "green";
       console.log("succefully connected to niri");
     }
-    onErrorOccurred: function(error) {
+    onErrorOccurred: function (error) {
       status.text = "Error";
       status.color = "red";
       console.error("error occurred!", error);
@@ -37,7 +37,7 @@ ApplicationWindow {
 
     keyboardLayouts.onCurrentIndexChanged: {
       console.log("(idx chng) currentName", niri.keyboardLayouts.currentName);
-      console.log("(idx chng) currentIndex", niri.keyboardLayouts.currentIndex)
+      console.log("(idx chng) currentIndex", niri.keyboardLayouts.currentIndex);
     }
   }
 
@@ -66,13 +66,14 @@ ApplicationWindow {
           id: actionResult
           anchors.centerIn: parent
           font.pixelSize: 11
-          text: lastActionResult === "" ? "✓ Action OK"
-                                                  : "✗ " + lastActionResult
+          text: lastActionResult === "" ? "✓ Action OK" : "✗ " + lastActionResult
           color: lastActionResult === "" ? "#2E7D32" : "#C62828"
         }
       }
 
-      Item { Layout.fillWidth: true }
+      Item {
+        Layout.fillWidth: true
+      }
 
       Text {
         text: "Current layout: " + niri.keyboardLayouts.currentName
@@ -80,7 +81,7 @@ ApplicationWindow {
       }
     }
 
- RowLayout {
+    RowLayout {
       Layout.fillWidth: true
 
       ListView {
@@ -98,7 +99,7 @@ ApplicationWindow {
           height: ListView.view.height
           width: 100
 
-          color: isCurrent ? "#4CAF50" : "#F5F5F5";
+          color: isCurrent ? "#4CAF50" : "#F5F5F5"
           radius: 5
 
           MouseArea {
@@ -108,53 +109,54 @@ ApplicationWindow {
             hoverEnabled: true
 
             onEntered: {
-              parent.opacity = 0.8
+              parent.opacity = 0.8;
             }
 
             onExited: {
-              parent.opacity = 1.0
+              parent.opacity = 1.0;
             }
 
-            onClicked: function(mouse) {
+            onClicked: function (mouse) {
               if (mouse.button === Qt.LeftButton) {
                 const r = niri.switchKeyboardLayoutByIndex(index);
-              lastActionResult = r.ok ? "" : r.error;
+                lastActionResult = r.ok ? "" : r.error;
+              }
             }
           }
-        }
 
-        ColumnLayout {
-          anchors.fill: parent
-          anchors.margins: 8
-          spacing: 5
+          ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 8
+            spacing: 5
 
-          Text {
-            text: modelData
-            font.bold: isCurrent
-            font.pixelSize: 14
-            color: isCurrent ? "white" : "black"
-          }
+            Text {
+              text: modelData
+              font.bold: isCurrent
+              font.pixelSize: 14
+              color: isCurrent ? "white" : "black"
+            }
 
-          Text {
-            text: "● CURRENT"
-            font.bold: true
-            color: "white"
-            visible: isCurrent
+            Text {
+              text: "● CURRENT"
+              font.bold: true
+              color: "white"
+              visible: isCurrent
+            }
           }
         }
       }
     }
-    }
 
-    
     RowLayout {
       Layout.fillWidth: true
-      
+
       Text {
         text: "An placeholder for any text"
       }
 
-      Item { Layout.fillWidth: true }
+      Item {
+        Layout.fillWidth: true
+      }
 
       RowLayout {
         spacing: 10
@@ -184,4 +186,3 @@ ApplicationWindow {
     }
   }
 }
-
