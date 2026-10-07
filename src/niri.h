@@ -8,6 +8,7 @@
 #include "windowmodel.h"
 #include "keyboardlayouts.h"
 #include "overview.h"
+#include "castmodel.h"
 
 class Niri : public QObject
 {
@@ -18,6 +19,7 @@ class Niri : public QObject
     Q_PROPERTY(Window *focusedWindow READ focusedWindow NOTIFY focusedWindowChanged)
     Q_PROPERTY(KeyboardLayouts *keyboardLayouts READ keyboardLayouts CONSTANT)
     Q_PROPERTY(Overview *overview READ overview CONSTANT)
+    Q_PROPERTY(CastModel *casts READ casts CONSTANT)
 
 public:
     explicit Niri(QObject *parent = nullptr);
@@ -28,6 +30,7 @@ public:
     Window *focusedWindow() const;
     KeyboardLayouts *keyboardLayouts() const { return m_keyboardLayouts; }
     Overview *overview() const { return m_overview; }
+    CastModel *casts() const { return m_castModel; }
 
     Q_INVOKABLE bool connect();
     Q_INVOKABLE bool isConnected() const;
@@ -53,6 +56,10 @@ public:
     Q_INVOKABLE QVariantMap closeWindowOrFocused(quint64 id = 0);
 
     Q_INVOKABLE QVariantMap toggleOverview();
+
+    // Stops all streams of a PipeWire screencast session. wlr-screencopy
+    // casts cannot be stopped via IPC.
+    Q_INVOKABLE QVariantMap stopCast(quint64 sessionId);
 
     // Keyboard layout switching methods.
     Q_INVOKABLE QVariantMap switchKeyboardLayoutPrev();
@@ -85,4 +92,5 @@ private:
     WorkspaceModel *m_workspaceModel = nullptr;
     WindowModel *m_windowModel = nullptr;
     KeyboardLayouts *m_keyboardLayouts = nullptr;
+    CastModel *m_castModel = nullptr;
 };

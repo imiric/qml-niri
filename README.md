@@ -8,6 +8,7 @@ A QML plugin for interacting with the [niri](https://github.com/niri-wm/niri) Wa
 - Real-time window and workspace monitoring and switching
 - Tracking of focus, urgency, layout changes, etc.
 - Keyboard layout tracking and switching
+- Screencast tracking and stopping
 - Application icon lookup via XDG desktop entries
 - Event-driven updates for all compositor changes
 - Native QML integration with Qt 6
@@ -238,6 +239,34 @@ Access overview information via the `overview` model.
 ```qml
 // Change object properties based on the current overview state
 color: niri.overview.isOpen ? "#000000" : "#FFFFFF"
+```
+
+### Working with screencasts
+
+Active screencasts (PipeWire via xdg-desktop-portal, or wlr-screencopy tools like wf-recorder) are exposed via the `casts` model. Requires niri v26.04 or newer.
+
+Note that wlr-screencopy has no "stopped" signal, so niri only removes those casts after ~10 seconds without new frames. PipeWire casts are removed immediately.
+
+```qml
+// Show a screen sharing indicator
+Text {
+    visible: niri.casts.anyActive
+    text: "● Sharing screen"
+}
+
+// List casts and stop them
+Repeater {
+    model: niri.casts
+    delegate: Button {
+        required property var sessionId
+        required property string kind
+        required property string targetOutput
+        text: "Stop sharing " + targetOutput
+        // wlr-screencopy casts cannot be stopped via IPC.
+        enabled: kind === "PipeWire"
+        onClicked: niri.stopCast(sessionId)
+    }
+}
 ```
 
 
@@ -475,6 +504,9 @@ just test windows
 
 # Test arbitrary actions (sendRawAction)
 just test action
+
+# Test cast model
+just test casts
 ```
 
 These test files are also useful examples of common patterns (e.g. sorting and filtering with `SortFilterProxyModel`).
@@ -484,7 +516,7 @@ Pull requests to improve the testing situation, add unit tests, CI, etc., are ve
 
 ## API Reference
 
-The plugin exposes five QML types: `Niri` (the main entry point), `WorkspaceModel` and `WindowModel` (list models for the `workspaces` and `windows` properties), `Window` (an individual window object) and `Overview` (an object representing the current overview state). Only `Niri` is directly instantiable; the others are obtained via `Niri`'s properties.
+The plugin exposes six QML types: `Niri` (the main entry point), `WorkspaceModel`, `WindowModel` and `CastModel` (list models for the `workspaces`, `windows` and `casts` properties), `Window` (an individual window object) and `Overview` (an object representing the current overview state). Only `Niri` is directly instantiable; the others are obtained via `Niri`'s properties.
 
 ### Niri
 
@@ -496,6 +528,7 @@ The main object. Connect to niri and issue actions through it.
 - `focusedWindow`: [Window](#window) - Currently focused window (`null` if none)
 - `keyboardLayouts`: [keyboardLayouts](#keyboardLayouts) - Configured keyboard layouts and the active one
 - `overview`: [Overview](#overview) - Current overview component state
+- `casts`: [CastModel](#castmodel) - List of active screencasts
 
 *Methods:*
 - `connect()`: bool - Connect to the niri IPC socket. Returns `true` on success.
@@ -507,6 +540,7 @@ The main object. Connect to niri and issue actions through it.
 - `closeWindow(id)`: object - Close specific window
 - `closeWindowOrFocused(id = 0)`: object - Close the given window, or the focused window if `id` is `0` (the default)
 - `toggleOverview()`: object - Show or hide the workspace overview
+- `stopCast(sessionId)`: object - Stop all streams of a PipeWire screencast session (wlr-screencopy casts cannot be stopped via IPC)
 - `sendRawAction(action)`: object - Send an arbitrary niri Action
 - `switchKeyboardLayoutPrev()`: object - Switching to the next configured keyboard layout
 - `switchKeyboardLayoutPrev()`: object - Switching to the previous configured keyboard layout
@@ -646,6 +680,32 @@ An object representing the state of niri's workspace overview. Owned by `Niri` a
 
 *Signals:*
 - `isOpenChanged()` - Emitted when the overview is opened or closed.
+
+
+### CastModel
+
+A `QAbstractListModel` holding all screencasts, sorted by stream ID. Accessed via `niri.casts`. Use it directly as a `model` for `ListView`/`Repeater`, where each delegate sees the [roles](#castmodel-roles) below.
+
+*Properties:*
+- `count`: int - Number of screencasts
+- `anyActive`: bool - Whether any screencast is currently streaming frames
+
+*Signals:*
+- `countChanged()` - Emitted when the number of screencasts changes
+- `anyActiveChanged()` - Emitted when `anyActive` changes
+
+#### CastModel roles
+
+- `streamId`: Unique stream identifier
+- `sessionId`: Session identifier (a session can have multiple streams; pass this to `stopCast()`)
+- `kind`: `"PipeWire"` or `"WlrScreencopy"`
+- `targetType`: `"Output"`, `"Window"`, or `"Nothing"` (target not yet set, or cleared)
+- `targetOutput`: Name of the captured output (empty unless `targetType` is `"Output"`)
+- `targetWindowId`: ID of the captured window (`0` unless `targetType` is `"Window"`)
+- `isDynamicTarget`: Whether this is a dynamic cast target screencast
+- `isActive`: Whether the cast is currently streaming frames (`false` e.g. when paused)
+- `pid`: Process ID of the consumer (`-1` if unknown; currently only known for wlr-screencopy)
+- `pwNodeId`: PipeWire node ID (`-1` for wlr-screencopy, or before the node is created)
 
 
 ## Troubleshooting
