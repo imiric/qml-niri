@@ -4,14 +4,6 @@
 #include "castmodel.h"
 #include "logging.h"
 
-bool Cast::operator==(const Cast &other) const
-{
-    return streamId == other.streamId && sessionId == other.sessionId && kind == other.kind
-            && targetType == other.targetType && targetOutput == other.targetOutput
-            && targetWindowId == other.targetWindowId && isDynamicTarget == other.isDynamicTarget
-            && isActive == other.isActive && pid == other.pid && pwNodeId == other.pwNodeId;
-}
-
 CastModel::CastModel(QObject *parent) : QAbstractListModel(parent) { }
 
 int CastModel::rowCount(const QModelIndex &parent) const
@@ -105,7 +97,6 @@ void CastModel::handleCastsChanged(const QJsonArray &casts)
 
     if (m_casts.count() != oldCount)
         emit countChanged();
-    updateAnyActive();
 }
 
 void CastModel::handleCastStartedOrChanged(const QJsonObject &castObj)
@@ -128,8 +119,6 @@ void CastModel::handleCastStartedOrChanged(const QJsonObject &castObj)
         const QModelIndex modelIdx = index(idx);
         emit dataChanged(modelIdx, modelIdx);
     }
-
-    updateAnyActive();
 }
 
 void CastModel::handleCastStopped(quint64 streamId)
@@ -145,17 +134,6 @@ void CastModel::handleCastStopped(quint64 streamId)
     endRemoveRows();
 
     emit countChanged();
-    updateAnyActive();
-}
-
-void CastModel::updateAnyActive()
-{
-    const bool anyActive =
-            std::any_of(m_casts.cbegin(), m_casts.cend(), [](const Cast &c) { return c.isActive; });
-    if (m_anyActive != anyActive) {
-        m_anyActive = anyActive;
-        emit anyActiveChanged();
-    }
 }
 
 Cast CastModel::parseCast(const QJsonObject &obj)

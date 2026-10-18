@@ -250,7 +250,7 @@ Note that wlr-screencopy has no "stopped" signal, so niri only removes those cas
 ```qml
 // Show a screen sharing indicator
 Text {
-    visible: niri.casts.anyActive
+    visible: niri.casts.count > 0
     text: "● Sharing screen"
 }
 
@@ -688,11 +688,9 @@ A `QAbstractListModel` holding all screencasts, sorted by stream ID. Accessed vi
 
 *Properties:*
 - `count`: int - Number of screencasts
-- `anyActive`: bool - Whether any screencast is currently streaming frames
 
 *Signals:*
 - `countChanged()` - Emitted when the number of screencasts changes
-- `anyActiveChanged()` - Emitted when `anyActive` changes
 
 #### CastModel roles
 

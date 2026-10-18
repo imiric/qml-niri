@@ -42,10 +42,6 @@ ApplicationWindow {
     function onCountChanged() {
       console.log("Cast count changed:", niri.casts.count);
     }
-
-    function onAnyActiveChanged() {
-      console.log("Any cast active:", niri.casts.anyActive);
-    }
   }
 
   ColumnLayout {
@@ -102,15 +98,15 @@ ApplicationWindow {
       Layout.fillWidth: true
       height: 40
       radius: 5
-      color: niri.casts.anyActive ? "#FFEBEE" : "#F5F5F5"
+      color: niri.casts.count > 0 ? "#FFEBEE" : "#F5F5F5"
       border.width: 2
-      border.color: niri.casts.anyActive ? "#F44336" : "#CCC"
+      border.color: niri.casts.count > 0 ? "#F44336" : "#CCC"
 
       Text {
         anchors.centerIn: parent
         font.bold: true
-        text: niri.casts.anyActive ? "● Screen is being shared" : "No active screencasts"
-        color: niri.casts.anyActive ? "#C62828" : "#666"
+        text: niri.casts.count > 0 ? "● Screen is being shared" : "No active screencasts"
+        color: niri.casts.count > 0 ? "#C62828" : "#666"
       }
     }
 

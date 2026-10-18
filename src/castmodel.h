@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <QAbstractListModel>
 #include <QJsonObject>
 #include <QObject>
@@ -25,7 +26,14 @@ struct Cast
     // -1 when unknown.
     qint64 pwNodeId = -1;
 
-    bool operator==(const Cast &other) const;
+    // Comparable view of all members, for equality, ordering, etc.
+    auto tie() const
+    {
+        return std::tie(streamId, sessionId, kind, targetType, targetOutput, targetWindowId,
+                        isDynamicTarget, isActive, pid, pwNodeId);
+    }
+
+    bool operator==(const Cast &other) const { return tie() == other.tie(); }
     bool operator!=(const Cast &other) const { return !(*this == other); }
 };
 
@@ -34,7 +42,6 @@ class CastModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(bool anyActive READ anyActive NOTIFY anyActiveChanged)
 
 public:
     enum CastRoles {
@@ -56,24 +63,19 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    bool anyActive() const { return m_anyActive; }
-
 public slots:
     void handleEvent(const QJsonObject &event);
 
 signals:
     void countChanged();
-    void anyActiveChanged();
 
 private:
     void handleCastsChanged(const QJsonArray &casts);
     void handleCastStartedOrChanged(const QJsonObject &castObj);
     void handleCastStopped(quint64 streamId);
-    void updateAnyActive();
 
     static Cast parseCast(const QJsonObject &obj);
     int findCastIndex(quint64 streamId) const;
 
     QList<Cast> m_casts;
-    bool m_anyActive = false;
 };
