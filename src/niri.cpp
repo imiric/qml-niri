@@ -38,8 +38,7 @@ Niri::Niri(QObject *parent)
     QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_overview, &Overview::handleEvent);
 
     // Wire events to cast model
-    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_castModel,
-                     &CastModel::handleEvent);
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_castModel, &CastModel::handleEvent);
 }
 
 Niri::~Niri() { }

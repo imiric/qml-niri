@@ -163,15 +163,21 @@ ApplicationWindow {
 
             Text {
               font.pixelSize: 11
-              text: "Kind: " + kind + " | Stream: " + streamId + " | Session: " + sessionId
-                  + (isDynamicTarget ? " | Dynamic target" : "")
+              text: {
+                const dynamic = isDynamicTarget ? " | Dynamic target" : "";
+                return "Kind: " + kind + " | Stream: " + streamId + " | Session: " + sessionId + dynamic;
+              }
             }
 
             Text {
               font.pixelSize: 11
               color: "#666"
-              text: (isActive ? "Active" : "Paused") + " | PID: " + (pid === -1 ? "n/a" : pid)
-                  + " | PipeWire node: " + (pwNodeId === -1 ? "n/a" : pwNodeId)
+              text: {
+                const status = isActive ? "Active" : "Paused";
+                const pidLabel = pid === -1 ? "n/a" : pid;
+                const pwNodeLabel = pwNodeId === -1 ? "n/a" : pwNodeId;
+                return status + " | PID: " + pidLabel + " | PipeWire node: " + pwNodeLabel;
+              }
             }
           }
 
