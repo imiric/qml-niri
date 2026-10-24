@@ -1,7 +1,16 @@
 #include "overview.h"
+#include "niri.h"
 #include "logging.h"
 
-Overview::Overview(QObject *parent) : QObject(parent) { }
+Overview::Overview(Niri *niri, QObject *parent) : QObject(parent), m_niri(niri) { }
+
+QVariantMap Overview::toggle()
+{
+    QJsonObject action;
+    action["ToggleOverview"] = QJsonObject{ };
+
+    return m_niri->sendAction(action);
+}
 
 void Overview::handleEvent(const QJsonObject &event)
 {

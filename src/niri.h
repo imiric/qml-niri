@@ -55,6 +55,7 @@ public:
     Q_INVOKABLE QVariantMap closeWindow(quint64 id);
     Q_INVOKABLE QVariantMap closeWindowOrFocused(quint64 id = 0);
 
+    // Deprecated: use niri.overview.toggle() instead. Will be removed in v0.5.0.
     Q_INVOKABLE QVariantMap toggleOverview();
 
     // Stops all streams of a PipeWire screencast session. wlr-screencopy
@@ -83,6 +84,7 @@ signals:
     void focusedWindowChanged();
 
 private:
+    friend class Overview;
     QVariantMap sendAction(const QJsonObject &action);
     static QVariantMap okResult();
     static QVariantMap errResult(const QString &error);

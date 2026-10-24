@@ -124,7 +124,7 @@ ApplicationWindow {
       Button {
         text: "Toggle Overview"
         onClicked: {
-          const r = niri.toggleOverview();
+          const r = niri.overview.toggle();
           lastActionResult = r.ok ? "" : r.error;
         }
       }

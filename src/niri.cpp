@@ -10,7 +10,7 @@ Niri::Niri(QObject *parent)
       m_workspaceModel(new WorkspaceModel(this)),
       m_windowModel(new WindowModel(this)),
       m_keyboardLayouts(new KeyboardLayouts(this)),
-      m_overview(new Overview(this)),
+      m_overview(new Overview(this, this)),
       m_castModel(new CastModel(this))
 {
     // Wire up IPC client signals
@@ -136,10 +136,10 @@ QVariantMap Niri::closeWindowOrFocused(quint64 id)
 
 QVariantMap Niri::toggleOverview()
 {
-    QJsonObject action;
-    action["ToggleOverview"] = QJsonObject{ };
+    qCWarning(niriLog) << "Niri.toggleOverview() is deprecated and will be removed in v0.5.0. "
+                          "Use Niri.overview.toggle() instead.";
 
-    return sendAction(action);
+    return m_overview->toggle();
 }
 
 QVariantMap Niri::stopCast(quint64 sessionId)

@@ -234,12 +234,22 @@ Both account for `maxCount`: rows hidden by the limit are treated as out of rang
 
 ### Working with overview
 
-Access overview information via the `overview` model.
+Access overview information via the `overview` property.
 
 ```qml
 // Change object properties based on the current overview state
 color: niri.overview.isOpen ? "#000000" : "#FFFFFF"
 ```
+
+Toggle the overview:
+
+```qml
+niri.overview.toggle()
+```
+
+> [!WARNING]
+> `niri.toggleOverview()` is deprecated as of v0.4.0 and will be removed in v0.5.0.
+> Use `niri.overview.toggle()` instead.
 
 ### Working with screencasts
 
@@ -539,7 +549,7 @@ The main object. Connect to niri and issue actions through it.
 - `focusWindow(id)`: object - Focus specific window
 - `closeWindow(id)`: object - Close specific window
 - `closeWindowOrFocused(id = 0)`: object - Close the given window, or the focused window if `id` is `0` (the default)
-- `toggleOverview()`: object - Show or hide the workspace overview
+- `toggleOverview()`: object - Show or hide the workspace overview (**Deprecated since v0.4.0, will be removed in v0.5.0.** Use `overview.toggle()` instead.)
 - `stopCast(sessionId)`: object - Stop all streams of a PipeWire screencast session (wlr-screencopy casts cannot be stopped via IPC)
 - `sendRawAction(action)`: object - Send an arbitrary niri Action
 - `switchKeyboardLayoutPrev()`: object - Switching to the next configured keyboard layout
@@ -677,6 +687,9 @@ An object representing the state of niri's workspace overview. Owned by `Niri` a
 
 *Properties:*
 - `isOpen`: bool - Whether the overview interface is currently active/open.
+
+*Methods:*
+- `toggle()`: object - Show or hide the workspace overview.
 
 *Signals:*
 - `isOpenChanged()` - Emitted when the overview is opened or closed.
