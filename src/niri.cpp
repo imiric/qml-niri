@@ -10,7 +10,8 @@ Niri::Niri(QObject *parent)
       m_workspaceModel(new WorkspaceModel(this)),
       m_windowModel(new WindowModel(this)),
       m_keyboardLayouts(new KeyboardLayouts(this)),
-      m_overview(new Overview(this))
+      m_overview(new Overview(this)),
+      m_castModel(new CastModel(this))
 {
     // Wire up IPC client signals
     QObject::connect(m_ipcClient, &IPCClient::connected, this, &Niri::connected);
@@ -35,6 +36,10 @@ Niri::Niri(QObject *parent)
 
     // Wire overview changes
     QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_overview, &Overview::handleEvent);
+
+    // Wire events to cast model
+    QObject::connect(m_ipcClient, &IPCClient::eventReceived, m_castModel,
+                     &CastModel::handleEvent);
 }
 
 Niri::~Niri() { }
@@ -134,6 +139,14 @@ QVariantMap Niri::toggleOverview()
 {
     QJsonObject action;
     action["ToggleOverview"] = QJsonObject{ };
+
+    return sendAction(action);
+}
+
+QVariantMap Niri::stopCast(quint64 sessionId)
+{
+    QJsonObject action;
+    action["StopCast"] = QJsonObject{ { "session_id", QJsonValue::fromVariant(sessionId) } };
 
     return sendAction(action);
 }
